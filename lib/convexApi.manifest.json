@@ -1,0 +1,21 @@
+{
+  "functions": [
+    "admin/createClinic:default",
+    "admin/getDoctor:default",
+    "admin/linkClinic:default",
+    "admin/listClinics:default",
+    "admin/listDoctors:default",
+    "admin/rejectDoctor:default",
+    "admin/resetTotp:default",
+    "admin/setRole:default",
+    "admin/verifyDoctor:default",
+    "doctor/auth/beginTotpEnrollment:default",
+    "doctor/auth/completeRegistration:default",
+    "doctor/auth/confirmTotpEnrollment:default",
+    "doctor/auth/getMyStage:default",
+    "doctor/auth/recordSessionStart:default",
+    "doctor/auth/recordSignOut:default",
+    "doctor/auth/verifyTotp:default",
+    "doctor/profile/getMyProfile:default"
+  ]
+}
