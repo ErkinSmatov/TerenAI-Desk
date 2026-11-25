@@ -16,6 +16,12 @@
     "doctor/auth/recordSessionStart:default",
     "doctor/auth/recordSignOut:default",
     "doctor/auth/verifyTotp:default",
+    "doctor/connect/cancel:default",
+    "doctor/connect/confirmPhone:default",
+    "doctor/connect/getConnection:default",
+    "doctor/connect/listPending:default",
+    "doctor/connect/redeemPatientCode:default",
+    "doctor/connect/startPhone:default",
     "doctor/profile/getMyProfile:default"
   ]
 }

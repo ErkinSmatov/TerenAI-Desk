@@ -8,6 +8,7 @@ import { makeFunctionReference } from "convex/server";
 export type DoctorId = string & { __table: "doctors" };
 export type ClinicId = string & { __table: "clinics" };
 export type UserId = string & { __table: "users" };
+export type PhoneConnectionId = string & { __table: "phoneConnections" };
 
 // ---- Общие типы ----
 export type DenyCode =
@@ -136,6 +137,56 @@ export type AdminActionResult =
   | { ok: true }
   | { ok: false; code: "not_found" | "not_web_doctor" | "clinic_required" };
 
+// ---- doctor/connect (Фаза 81) ----
+export type ConnectionStatus = "awaiting_code" | "awaiting_install" | "awaiting_patient" | "expired";
+
+export type StartPhoneResult =
+  | Denied
+  | { ok: true; connectionId: PhoneConnectionId; phoneMasked: string }
+  | { ok: false; code: "invalid_phone" | "rate_limited" | "already_pending" };
+
+export type GetConnectionResult =
+  | Denied
+  | { ok: false; code: "not_found" | "not_verified" }
+  | {
+      ok: true;
+      status: ConnectionStatus;
+      sendState: "sending" | "sent" | "failed";
+      sendError: string | null;
+      phoneMasked: string;
+      codeExpiresAt: number | null;
+      attemptsLeft: number;
+    };
+
+export type ConfirmPhoneResult =
+  | Denied
+  | {
+      ok: true;
+      status: "awaiting_patient" | "awaiting_install" | "already_connected" | "unavailable";
+    }
+  | { ok: false; code: "invalid_code"; attemptsLeft: number }
+  | { ok: false; code: "code_expired" | "too_many_attempts" | "rate_limited" | "not_found" };
+
+export type RedeemPatientCodeResult =
+  | Denied
+  | { ok: true; status: "pending" | "active" }
+  | { ok: false; code: "not_found" | "not_accepted" | "rate_limited" };
+
+export type PendingConnectionRow = {
+  connectionId: PhoneConnectionId;
+  phoneMasked: string;
+  status: "awaiting_install" | "awaiting_patient" | "expired";
+  expiresAt: number;
+  createdAt: number;
+};
+
+export type ListPendingResult =
+  | Denied
+  | { ok: false; code: "not_verified" }
+  | { ok: true; truncated: boolean; connections: PendingConnectionRow[] };
+
+export type CancelConnectionResult = Denied | { ok: true } | { ok: false; code: "not_found" };
+
 type NoArgs = Record<string, never>;
 
 export const api = {
@@ -199,5 +250,34 @@ export const api = {
     resetTotp: makeFunctionReference<"mutation", { doctorId: DoctorId }, AdminActionResult>(
       "admin/resetTotp:default",
     ),
+  },
+  // Группа connect отдельная от doctor: тест обходит ровно два уровня (группа -> ссылка).
+  connect: {
+    startPhone: makeFunctionReference<
+      "mutation",
+      { country: string; phone: string },
+      StartPhoneResult
+    >("doctor/connect/startPhone:default"),
+    getConnection: makeFunctionReference<
+      "query",
+      { connectionId: PhoneConnectionId },
+      GetConnectionResult
+    >("doctor/connect/getConnection:default"),
+    confirmPhone: makeFunctionReference<
+      "mutation",
+      { connectionId: PhoneConnectionId; code: string },
+      ConfirmPhoneResult
+    >("doctor/connect/confirmPhone:default"),
+    redeemPatientCode: makeFunctionReference<"mutation", { code: string }, RedeemPatientCodeResult>(
+      "doctor/connect/redeemPatientCode:default",
+    ),
+    listPending: makeFunctionReference<"query", NoArgs, ListPendingResult>(
+      "doctor/connect/listPending:default",
+    ),
+    cancel: makeFunctionReference<
+      "mutation",
+      { connectionId: PhoneConnectionId },
+      CancelConnectionResult
+    >("doctor/connect/cancel:default"),
   },
 } as const;
