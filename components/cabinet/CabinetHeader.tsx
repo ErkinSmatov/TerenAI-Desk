@@ -1,14 +1,7 @@
-import { UserRound } from "lucide-react";
 import type { ClinicRole, DoctorStatus } from "@/lib/convexApi";
 import { clinicRoleLabel } from "@/lib/labels";
 import { StatusBadge } from "@/components/cabinet/StatusBadge";
-import { SignOutButton } from "@/components/auth/SignOutButton";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { AccountMenu } from "@/components/auth/AccountMenu";
 
 type HeaderProfile = {
   fullName: string;
@@ -34,19 +27,7 @@ export function CabinetHeader({ profile }: { profile: HeaderProfile }) {
             ) : null}
           </div>
           <StatusBadge status={profile.status} />
-          <DropdownMenu>
-            <DropdownMenuTrigger
-              aria-label="Меню аккаунта"
-              className="flex size-11 items-center justify-center rounded-full bg-white text-[#0A0D12] shadow-sm outline-none focus-visible:ring-2 focus-visible:ring-[#0A0D12] focus-visible:ring-offset-2"
-            >
-              <UserRound className="size-5" aria-hidden />
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="p-2">
-              <DropdownMenuItem asChild onSelect={(e) => e.preventDefault()}>
-                <SignOutButton className="h-11 w-full justify-start rounded-full border-0 bg-transparent px-4 text-sm font-semibold shadow-none" />
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <AccountMenu />
         </div>
       </div>
     </header>
