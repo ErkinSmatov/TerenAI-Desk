@@ -10,6 +10,8 @@ export const MSG = {
   emailCode: "Введите 8-значный код из письма.",
   totpCode: "Введите 6-значный код из приложения.",
   phone: "Введите номер в формате +7 700 000 00 00.",
+  patientCode: "Введите 5-значный код из приложения пациента.",
+  connectCode: "Введите 6-значный код из WhatsApp.",
 } as const;
 
 export const emailSchema = z
@@ -56,6 +58,19 @@ export const profileSchema = z.object({
     .min(1, MSG.required)
     .refine((v) => /^\+?\d{10,15}$/.test(v.replace(/[\s()-]/g, "")), MSG.phone),
 });
+
+// Подключение пациента (Фаза 81). Страна — из закрытого списка CalYo, номер нормализует сервер.
+export const connectPhoneSchema = z.object({
+  country: z.enum(["KZ", "RU", "UZ", "KG", "TJ", "AZ", "GE", "BY", "AM", "MD", "TM"]),
+  phone: z
+    .string()
+    .trim()
+    .min(5, MSG.phone)
+    .max(32, MSG.phone)
+    .regex(/^[\d\s()+-]+$/, MSG.phone),
+});
+export const connectCodeSchema = z.string().regex(/^\d{6}$/, MSG.connectCode);
+export const patientCodeSchema = z.string().regex(/^\d{5}$/, MSG.patientCode);
 
 export const resetRequestSchema = z.object({ email: emailSchema });
 

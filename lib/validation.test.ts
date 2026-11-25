@@ -1,5 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {
+  connectCodeSchema,
+  connectPhoneSchema,
+  patientCodeSchema,
   emailCodeSchema,
   emailSchema,
   passwordSchema,
@@ -100,5 +103,30 @@ describe("resetConfirmSchema", () => {
     expect(
       resetConfirmSchema.safeParse({ email: "a@b.kz", code: "1", newPassword: "a".repeat(12) }).success,
     ).toBe(false);
+  });
+});
+
+describe("connectPhoneSchema", () => {
+  it("принимает разные форматы номера", () => {
+    expect(connectPhoneSchema.safeParse({ country: "KZ", phone: "8 701 123 45 67" }).success).toBe(true);
+    expect(connectPhoneSchema.safeParse({ country: "RU", phone: "+7 (701) 123-45-67" }).success).toBe(true);
+  });
+  it("отклоняет мусор, пустую строку и чужую страну", () => {
+    expect(connectPhoneSchema.safeParse({ country: "KZ", phone: "abc" }).success).toBe(false);
+    expect(connectPhoneSchema.safeParse({ country: "KZ", phone: "" }).success).toBe(false);
+    expect(connectPhoneSchema.safeParse({ country: "US", phone: "8 701 123 45 67" }).success).toBe(false);
+  });
+});
+
+describe("connectCodeSchema и patientCodeSchema", () => {
+  it("код из WhatsApp — 6 цифр", () => {
+    expect(connectCodeSchema.safeParse("123456").success).toBe(true);
+    expect(connectCodeSchema.safeParse("12345").success).toBe(false);
+    expect(connectCodeSchema.safeParse("12345a").success).toBe(false);
+  });
+  it("код пациента — 5 цифр", () => {
+    expect(patientCodeSchema.safeParse("12345").success).toBe(true);
+    expect(patientCodeSchema.safeParse("123456").success).toBe(false);
+    expect(patientCodeSchema.safeParse("").success).toBe(false);
   });
 });
