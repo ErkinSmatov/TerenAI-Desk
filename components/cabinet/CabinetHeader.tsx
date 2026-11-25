@@ -1,6 +1,7 @@
 import type { ClinicRole, DoctorStatus } from "@/lib/convexApi";
 import { clinicRoleLabel } from "@/lib/labels";
 import { StatusBadge } from "@/components/cabinet/StatusBadge";
+import { CabinetNav } from "@/components/cabinet/CabinetNav";
 import { AccountMenu } from "@/components/auth/AccountMenu";
 
 type HeaderProfile = {
@@ -16,7 +17,10 @@ export function CabinetHeader({ profile }: { profile: HeaderProfile }) {
   return (
     <header className="h-16 bg-[#F7F7F7] text-[#0A0D12] shadow-sm">
       <div className="mx-auto flex h-full w-full max-w-[1152px] items-center justify-between gap-4 px-4 sm:px-6">
-        <span className="text-xl leading-[1.2] font-semibold tracking-tight">TerenDesk</span>
+        <div className="flex items-center gap-6">
+          <span className="text-xl leading-[1.2] font-semibold tracking-tight">TerenDesk</span>
+          {profile.status === "verified" ? <CabinetNav /> : null}
+        </div>
         <div className="flex items-center gap-3">
           <div className="flex flex-col items-end">
             <span className="text-sm leading-[1.4] font-semibold">{profile.fullName}</span>
