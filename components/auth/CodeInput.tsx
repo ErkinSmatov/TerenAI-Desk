@@ -4,7 +4,7 @@ import { REGEXP_ONLY_DIGITS } from "input-otp";
 import { InputOTP, InputOTPGroup, InputOTPSeparator, InputOTPSlot } from "@/components/ui/input-otp";
 
 type CodeInputProps = {
-  length: 6 | 8;
+  length: 5 | 6 | 8;
   value: string;
   onChange: (value: string) => void;
   disabled?: boolean;
@@ -29,6 +29,7 @@ export function CodeInput({
   "aria-label": ariaLabel,
 }: CodeInputProps) {
   const half = length / 2;
+  const odd = length % 2 !== 0;
   return (
     <InputOTP
       id={id}
@@ -45,22 +46,32 @@ export function CodeInput({
       aria-label={ariaLabel ?? "Код"}
       containerClassName="justify-center gap-2"
     >
-      <InputOTPGroup>
-        {Array.from({ length: half }, (_, i) => (
-          <InputOTPSlot key={i} index={i} className={SLOT_CLASS} aria-invalid={invalid || undefined} />
-        ))}
-      </InputOTPGroup>
-      <InputOTPSeparator />
-      <InputOTPGroup>
-        {Array.from({ length: half }, (_, i) => (
-          <InputOTPSlot
-            key={half + i}
-            index={half + i}
-            className={SLOT_CLASS}
-            aria-invalid={invalid || undefined}
-          />
-        ))}
-      </InputOTPGroup>
+      {odd ? (
+        <InputOTPGroup>
+          {Array.from({ length }, (_, i) => (
+            <InputOTPSlot key={i} index={i} className={SLOT_CLASS} aria-invalid={invalid || undefined} />
+          ))}
+        </InputOTPGroup>
+      ) : (
+        <>
+          <InputOTPGroup>
+            {Array.from({ length: half }, (_, i) => (
+              <InputOTPSlot key={i} index={i} className={SLOT_CLASS} aria-invalid={invalid || undefined} />
+            ))}
+          </InputOTPGroup>
+          <InputOTPSeparator />
+          <InputOTPGroup>
+            {Array.from({ length: half }, (_, i) => (
+              <InputOTPSlot
+                key={half + i}
+                index={half + i}
+                className={SLOT_CLASS}
+                aria-invalid={invalid || undefined}
+              />
+            ))}
+          </InputOTPGroup>
+        </>
+      )}
     </InputOTP>
   );
 }
