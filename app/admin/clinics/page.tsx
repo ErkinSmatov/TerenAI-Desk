@@ -24,6 +24,9 @@ export default async function ClinicsPage() {
         <h1 className="text-2xl leading-[1.2] font-semibold">Клиники</h1>
         <CreateClinicDialog />
       </div>
+      {result.truncated ? (
+        <p className="text-sm text-[#5B6270]">Показаны не все записи: самые новые первыми.</p>
+      ) : null}
       {result.clinics.length === 0 ? (
         <div className="rounded-2xl bg-[#F4F5F7] p-8">
           <h2 className="text-xl leading-[1.2] font-semibold">Клиник пока нет</h2>

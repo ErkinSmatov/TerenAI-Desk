@@ -97,7 +97,7 @@ export type AdminDoctorRow = {
   status: DoctorStatus;
   clinicName: string | null;
 };
-export type ListDoctorsResult = Denied | { ok: true; doctors: AdminDoctorRow[] };
+export type ListDoctorsResult = Denied | { ok: true; doctors: AdminDoctorRow[]; truncated: boolean };
 
 export type AdminDoctorDetail = {
   doctorId: DoctorId;
@@ -120,7 +120,11 @@ export type GetDoctorResult =
 
 export type ListClinicsResult =
   | Denied
-  | { ok: true; clinics: Array<{ clinicId: ClinicId; name: string; doctorCount: number }> };
+  | {
+      ok: true;
+      clinics: Array<{ clinicId: ClinicId; name: string; doctorCount: number }>;
+      truncated: boolean;
+    };
 
 export type CreateClinicResult =
   | Denied

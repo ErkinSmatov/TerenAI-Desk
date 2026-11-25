@@ -18,19 +18,27 @@ function Row({ label, value }: { label: string; value: string }) {
   );
 }
 
+// Формат Convex Id: неверный параметр даёт 404, а не ArgumentValidationError (WR-06).
+const DOCTOR_ID_PATTERN = /^[a-z0-9]{20,40}$/;
+
 export default async function DoctorCardPage({
   params,
 }: {
   params: Promise<{ doctorId: string }>;
 }) {
   const { doctorId } = await params;
+  if (!DOCTOR_ID_PATTERN.test(doctorId)) notFound();
   const [doctorResult, clinicsResult] = await Promise.all([
     callQuery(api.admin.getDoctor, { doctorId: doctorId as DoctorId }),
     callQuery(api.admin.listClinics, {}),
   ]);
   if (!doctorResult.ok) {
-    if ("code" in doctorResult && doctorResult.code === "not_found") notFound();
-    redirectDenied(doctorResult as Parameters<typeof redirectDenied>[0]);
+    switch (doctorResult.code) {
+      case "not_found":
+        notFound();
+      default:
+        redirectDenied(doctorResult);
+    }
   }
   if (!clinicsResult.ok) redirectDenied(clinicsResult);
   const doctor = doctorResult.doctor;

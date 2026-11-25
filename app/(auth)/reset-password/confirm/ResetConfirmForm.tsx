@@ -29,7 +29,7 @@ export function ResetConfirmForm() {
   const [formError, setFormError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
 
-  if (!email) {
+  if (!email && !pending) {
     return (
       <div className="flex flex-col gap-4">
         <p className="text-base text-[#5B6270]">
@@ -76,10 +76,11 @@ export function ResetConfirmForm() {
         newPassword: data.newPassword,
         flow: "reset-verification",
       });
-      clearCredentials();
       // Второй фактор обязателен и после сброса: маршрут определяет стадия.
       const { redirectTo } = await afterPasswordSignIn();
       router.replace(redirectTo);
+      // WR-01: контекст очищается после перехода, иначе форма сменится на «данные не сохранились».
+      clearCredentials();
     } catch (error) {
       setFormError(mapAuthError(error));
       setPending(false);
