@@ -173,9 +173,13 @@ export function ConnectWizard() {
     });
   }
 
+  // Пока код не выдан (sending) или отправка не удалась (failed), ввод бесполезен и тратит лимит.
+  // timeout не блокируем: код мог прийти, сервер сам ответит code_sending.
+  const codeBlocked = connectionId !== null && (sendState === "sending" || sendState === "failed");
+
   function confirmCode(e: React.FormEvent) {
     e.preventDefault();
-    if (pending || !connectionId) return;
+    if (pending || !connectionId || codeBlocked) return;
     setPhoneError(null);
     startTransition(async () => {
       const result = await confirmPhoneAction(connectionId, code);
@@ -317,13 +321,13 @@ export function ConnectWizard() {
             length={6}
             value={code}
             onChange={setCode}
-            disabled={pending}
+            disabled={pending || codeBlocked}
             invalid={phoneError !== null}
             aria-label="Код из WhatsApp"
           />
         </div>
         <FormError message={phoneError} />
-        <SubmitButton pending={pending} disabled={code.length !== 6}>
+        <SubmitButton pending={pending} disabled={code.length !== 6 || codeBlocked}>
           Подтвердить номер
         </SubmitButton>
         {canResend && sendState === "sent" ? (
