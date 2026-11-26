@@ -33,6 +33,8 @@ export function connectMessage(
       return `Неверный код. Осталось попыток: ${extra?.attemptsLeft ?? 0}.`;
     case "code_expired":
       return "Код устарел. Отправьте новый код.";
+    case "code_sending":
+      return "Код ещё отправляется. Дождитесь сообщения в WhatsApp и введите код.";
     case "too_many_attempts":
       return "Слишком много неверных попыток. Отправьте новый код.";
     case "not_found":

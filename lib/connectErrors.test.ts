@@ -21,6 +21,13 @@ describe("connectMessage", () => {
     expect(connectMessage("invalid_code")).toBe("Неверный код. Осталось попыток: 0.");
   });
 
+  it("code_sending отличается от code_expired", () => {
+    expect(connectMessage("code_sending")).toBe(
+      "Код ещё отправляется. Дождитесь сообщения в WhatsApp и введите код.",
+    );
+    expect(connectMessage("code_expired")).toBe("Код устарел. Отправьте новый код.");
+  });
+
   it("неизвестный код даёт общий текст", () => {
     expect(connectMessage("whatever")).toBe(CONNECT_GENERIC);
     expect(connectMessage("constructor")).toBe(CONNECT_GENERIC);

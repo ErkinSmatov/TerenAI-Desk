@@ -165,7 +165,10 @@ export type ConfirmPhoneResult =
       status: "awaiting_patient" | "awaiting_install" | "already_connected" | "unavailable";
     }
   | { ok: false; code: "invalid_code"; attemptsLeft: number }
-  | { ok: false; code: "code_expired" | "too_many_attempts" | "rate_limited" | "not_found" };
+  | {
+      ok: false;
+      code: "code_expired" | "code_sending" | "too_many_attempts" | "rate_limited" | "not_found";
+    };
 
 export type RedeemPatientCodeResult =
   | Denied
