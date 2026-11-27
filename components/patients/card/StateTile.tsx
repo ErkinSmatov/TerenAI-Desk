@@ -16,20 +16,18 @@ function formatLastRecord(ms: number, now: Date): string {
   return `${pad(d.getDate())}.${pad(d.getMonth() + 1)} ${time}`;
 }
 
+// Содержимое блока «Состояние» внутри плитки пациента: причина статуса и время последней записи.
 export function StateTile({ status, approximate }: { status: PatientStatus; approximate: boolean }) {
   return (
-    <section className="rounded-[32px] bg-[#F7F7F7] p-6 text-[#0A0D12] shadow-sm">
-      <h2 className="text-xl leading-[1.2] font-semibold">Состояние</h2>
-      <p className="mt-4 text-base leading-normal font-normal">{reasonText(status.reason)}</p>
-      <p className="mt-2 text-base leading-normal font-normal tabular-nums" suppressHydrationWarning>
+    <div className="flex flex-col gap-1">
+      <p className="text-sm leading-normal font-normal">{reasonText(status.reason)}</p>
+      <p className="text-sm leading-normal font-normal text-td-ink-2 tabular-nums" suppressHydrationWarning>
         Последняя запись:{" "}
         {status.lastRecordAt === null ? "нет записей" : formatLastRecord(status.lastRecordAt, new Date())}
       </p>
       {approximate ? (
-        <p className="mt-2 text-sm leading-normal font-normal text-[#5B6270]">
-          Оценка по дневным данным
-        </p>
+        <p className="text-xs leading-normal font-normal text-td-ink-3">Оценка по дневным данным</p>
       ) : null}
-    </section>
+    </div>
   );
 }

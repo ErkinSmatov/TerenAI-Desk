@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Loader2, Pencil, Trash2 } from "lucide-react";
+import { Loader2, Pencil, Plus, Trash2 } from "lucide-react";
 import {
   createNoteAction,
   deleteNoteAction,
@@ -132,7 +132,7 @@ export function Notes({ patientId, notes, onNotesChange, onAccessLost }: NotesPr
         />
         <p
           className={`text-sm leading-[1.4] font-normal tabular-nums ${
-            length > MAX_LENGTH ? "text-[#B42318]" : "text-[#5B6270]"
+            length > MAX_LENGTH ? "text-[#B42318]" : "text-td-ink-2"
           }`}
         >
           {length} из {MAX_LENGTH}
@@ -157,9 +157,9 @@ export function Notes({ patientId, notes, onNotesChange, onAccessLost }: NotesPr
   }
 
   return (
-    <section className="rounded-[32px] bg-[#F7F7F7] p-6 text-[#0A0D12] shadow-sm lg:col-span-2">
+    <section className="rounded-[36px] bg-td-tile p-6 text-td-ink">
       <div className="flex flex-wrap items-center justify-between gap-4">
-        <h2 className="text-xl leading-[1.2] font-semibold">Заметки врача</h2>
+        <h2 className="text-base font-semibold">Заметки врача</h2>
         {editor === null ? (
           <Button
             type="button"
@@ -168,8 +168,9 @@ export function Notes({ patientId, notes, onNotesChange, onAccessLost }: NotesPr
               setDraft("");
               setEditor({ mode: "create" });
             }}
-            className="h-11 rounded-full px-5 font-semibold"
+            className="h-11 rounded-full border-0 bg-td-accent px-5 font-semibold text-td-ink hover:bg-td-accent hover:brightness-95"
           >
+            <Plus aria-hidden />
             Добавить заметку
           </Button>
         ) : null}
@@ -178,11 +179,11 @@ export function Notes({ patientId, notes, onNotesChange, onAccessLost }: NotesPr
       {editor?.mode === "create" ? <div className="mt-4">{renderEditor()}</div> : null}
 
       {sorted.length === 0 && editor === null ? (
-        <p className="mt-4 text-base leading-normal font-normal text-[#5B6270]">
+        <p className="mt-4 text-base leading-normal font-normal text-td-ink-2">
           Заметок пока нет. Добавьте первую, чтобы коллеги из клиники видели ваши наблюдения.
         </p>
       ) : (
-        <ul className="mt-4 flex flex-col divide-y divide-[#E5E7EB]">
+        <ul className="mt-4 flex flex-col divide-y divide-black/10">
           {sorted.map((note) => {
             const editing = editor?.mode === "edit" && editor.noteId === note.noteId;
             return (
@@ -191,7 +192,7 @@ export function Notes({ patientId, notes, onNotesChange, onAccessLost }: NotesPr
                   <div className="min-w-0">
                     <p className="text-sm leading-[1.4] font-semibold">
                       {authorLabel(note.authorName, note.isMine)}
-                      <span className="font-normal text-[#5B6270]">
+                      <span className="font-normal text-td-ink-2">
                         {" · "}
                         {formatDateTime(note.createdAt)}
                         {note.updatedAt !== null

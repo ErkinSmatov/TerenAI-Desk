@@ -19,6 +19,9 @@
   --color-td-ink: var(--td-ink);
   --color-td-ink-2: var(--td-ink-2);
   --color-td-ink-3: var(--td-ink-3);
+  --color-td-bar-norm: var(--td-bar-norm);
+  --color-td-bar-target: var(--td-bar-target);
+  --color-td-bar-high: var(--td-bar-high);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);

@@ -38,22 +38,22 @@ export function ChartTile({
   return (
     <section
       className={cn(
-        "rounded-[32px] bg-[#F7F7F7] p-6 text-[#0A0D12] shadow-sm",
-        fullWidth && "lg:col-span-2",
+        "rounded-[36px] bg-td-tile p-6 text-td-ink",
+        fullWidth && "lg:col-span-3",
       )}
     >
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <h2 className="text-xl leading-[1.2] font-semibold">{title}</h2>
+          <h2 className="text-base font-semibold">{title}</h2>
           {unitLabel ? (
-            <p className="mt-1 text-sm leading-[1.4] font-semibold text-[#5B6270]">{unitLabel}</p>
+            <p className="mt-1 text-sm leading-[1.4] font-semibold text-td-ink-2">{unitLabel}</p>
           ) : null}
         </div>
         {headerExtra ? <div>{headerExtra}</div> : null}
       </div>
 
       {isEmpty ? (
-        <p className="mt-4 flex h-[240px] items-center justify-center text-base leading-normal font-normal text-[#5B6270]">
+        <p className="mt-4 flex h-[240px] items-center justify-center text-base leading-normal font-normal text-td-ink-2">
           Нет измерений за выбранный период
         </p>
       ) : (

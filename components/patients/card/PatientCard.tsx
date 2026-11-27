@@ -9,7 +9,6 @@ import { statusLabel } from "@/lib/patientLabels";
 import { usePolling } from "@/lib/usePolling";
 import { Alert } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
-import { HealthStatusBadge } from "../HealthStatusBadge";
 import { CardClosed } from "./CardClosed";
 import {
   BloodPressureChart,
@@ -18,9 +17,9 @@ import {
   WeightChart,
 } from "./Charts";
 import { MealFeed } from "./MealFeed";
+import { CaloriesTile, GlucoseTile, PatientTile, SugarDayTile, TileMessage } from "./SummaryTiles";
 import { Notes } from "./Notes";
 import { ProfileTile } from "./ProfileTile";
-import { StateTile } from "./StateTile";
 
 const PERIODS: { value: PeriodDays; label: string }[] = [
   { value: 7, label: "7 дней" },
@@ -52,11 +51,12 @@ function useMounted(): boolean {
 
 function TilesSkeleton() {
   return (
-    <div className="grid grid-cols-1 gap-4 lg:grid-cols-2" aria-hidden>
-      <Skeleton className="h-56 rounded-[32px]" />
-      <Skeleton className="h-56 rounded-[32px]" />
-      <Skeleton className="h-80 rounded-[32px] lg:col-span-2" />
-      <Skeleton className="h-80 rounded-[32px] lg:col-span-2" />
+    <div className="grid grid-cols-1 gap-4 lg:grid-cols-3" aria-hidden>
+      <Skeleton className="h-56 rounded-[36px]" />
+      <Skeleton className="h-56 rounded-[36px] lg:col-span-2" />
+      <Skeleton className="h-72 rounded-[36px]" />
+      <Skeleton className="h-72 rounded-[36px]" />
+      <Skeleton className="h-72 rounded-[36px]" />
     </div>
   );
 }
@@ -116,8 +116,6 @@ export function PatientCard({
     return <CardClosed variant="access_closed" />;
 
   const { series, meals, profile, status } = data;
-  const noDataDays =
-    status.reason.code === "no_data" ? status.reason.days : undefined;
   const updatedAt = timeFormat.format(new Date(data.generatedAt));
   const hasAnyRecord =
     series.glucose.length > 0 ||
@@ -132,55 +130,51 @@ export function PatientCard({
     new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1),
   );
 
+  const todayMeals = meals.days.find((d) => d.date === todayKey);
+  const targets = meals.targets ?? profile.targets;
+  const offsetMinutes = -now.getTimezoneOffset();
+
   return (
-    <div className="flex flex-col gap-8">
+    <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-4">
         <Link
           href="/patients"
-          className="w-fit text-sm text-[#0A0D12] underline underline-offset-4 outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+          className="w-fit rounded-full bg-td-pill px-4 py-2 text-sm font-semibold text-td-ink outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
         >
           ← Пациенты
         </Link>
         <div className="flex flex-wrap items-center justify-between gap-4">
-          <div className="flex flex-wrap items-center gap-3">
-            <h1 className="text-[28px] leading-[1.2] font-semibold text-[#0A0D12]">
-              {data.patient.displayName}
-            </h1>
-            <HealthStatusBadge status={status.status} noDataDays={noDataDays} />
-          </div>
-          <div className="flex flex-wrap items-center gap-4">
-            <p className="text-sm text-[#5B6270]" suppressHydrationWarning>
-              Обновлено {updatedAt}
-            </p>
-            <div
-              role="group"
-              aria-label="Период графиков"
-              className="flex gap-1 rounded-full bg-[#F4F5F7] p-1"
-            >
-              {PERIODS.map((p) => {
-                const selected = periodDays === p.value;
-                return (
-                  <button
-                    key={p.value}
-                    type="button"
-                    aria-pressed={selected}
-                    onClick={() => setPeriodDays(p.value)}
-                    className={`h-11 rounded-full px-4 text-sm font-semibold text-[#0A0D12] outline-none transition-colors duration-150 focus-visible:ring-3 focus-visible:ring-ring/50 ${
-                      selected ? "bg-[#C9F14C]" : "hover:bg-[#E5E7EB]"
-                    }`}
-                  >
-                    {p.label}
-                  </button>
-                );
-              })}
-            </div>
+          <h1 className="text-[40px] leading-[1.1] font-semibold tracking-[-0.6px] text-td-ink max-sm:text-[32px]">
+            Сводка по пациенту
+          </h1>
+          <div
+            role="group"
+            aria-label="Период графиков"
+            className="flex gap-1 rounded-full bg-td-pill p-1"
+          >
+            {PERIODS.map((p) => {
+              const selected = periodDays === p.value;
+              return (
+                <button
+                  key={p.value}
+                  type="button"
+                  aria-pressed={selected}
+                  onClick={() => setPeriodDays(p.value)}
+                  className={`h-11 rounded-full px-4 text-sm font-semibold text-td-ink outline-none transition-colors duration-150 focus-visible:ring-3 focus-visible:ring-ring/50 ${
+                    selected ? "bg-td-accent" : "hover:bg-td-badge"
+                  }`}
+                >
+                  {p.label}
+                </button>
+              );
+            })}
           </div>
         </div>
         <div aria-live="polite" className="sr-only">
           {announcement}
         </div>
         {consecutiveErrors > 0 ? (
-          <Alert role="status" className="text-[#0A0D12]">
+          <Alert role="status" className="text-td-ink">
             <span suppressHydrationWarning>
               Не удалось обновить данные. Показаны данные на {updatedAt}.
             </span>
@@ -191,9 +185,32 @@ export function PatientCard({
       {!mounted ? (
         <TilesSkeleton />
       ) : (
-        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-          <ProfileTile profile={profile} linkedAt={data.patient.linkedAt} />
-          <StateTile status={status} approximate={data.approximate} />
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+          <PatientTile
+            name={data.patient.displayName}
+            status={status}
+            updatedAt={updatedAt}
+            approximate={data.approximate}
+          />
+          <SugarDayTile
+            points={series.glucose}
+            zone={series.ranges.glucoseMmol}
+            now={data.generatedAt}
+            offsetMinutes={offsetMinutes}
+          />
+          <CaloriesTile day={todayMeals} targets={targets} />
+          <GlucoseTile points={series.glucose} unit={unit} />
+          <Notes
+            patientId={patientId}
+            notes={data.notes}
+            onNotesChange={(next) =>
+              setData((d) => (d ? { ...d, notes: next } : d))
+            }
+            onAccessLost={() => {
+              setClosed("access_closed");
+              setData(null);
+            }}
+          />
 
           {hasAnyRecord ? (
             <>
@@ -215,6 +232,7 @@ export function PatientCard({
               />
               <WeightChart points={series.weight} />
               <StepsChart points={series.steps} goal={series.stepsGoal} />
+              <ProfileTile profile={profile} linkedAt={data.patient.linkedAt} />
               <MealFeed
                 days={meals.days}
                 targets={meals.targets}
@@ -228,28 +246,13 @@ export function PatientCard({
               />
             </>
           ) : (
-            <section className="rounded-[32px] bg-[#F7F7F7] p-8 text-[#0A0D12] shadow-sm lg:col-span-2">
-              <h2 className="text-xl leading-[1.2] font-semibold">
-                Записей пока нет
-              </h2>
-              <p className="mt-3 max-w-xl text-base leading-normal text-[#5B6270]">
-                Пациент ещё не вносил данные. Они появятся здесь после первых
-                записей.
-              </p>
-            </section>
+            <>
+              <TileMessage title="Записей пока нет">
+                Пациент ещё не вносил данные. Они появятся здесь после первых записей.
+              </TileMessage>
+              <ProfileTile profile={profile} linkedAt={data.patient.linkedAt} />
+            </>
           )}
-
-          <Notes
-            patientId={patientId}
-            notes={data.notes}
-            onNotesChange={(next) =>
-              setData((d) => (d ? { ...d, notes: next } : d))
-            }
-            onAccessLost={() => {
-              setClosed("access_closed");
-              setData(null);
-            }}
-          />
         </div>
       )}
     </div>

@@ -15,9 +15,9 @@ const TEXTS = {
 export function CardClosed({ variant }: { variant: "not_found" | "access_closed" }) {
   const t = TEXTS[variant];
   return (
-    <div className="rounded-[32px] bg-[#F7F7F7] p-8 text-[#0A0D12] shadow-sm">
+    <div className="rounded-[36px] bg-td-tile p-8 text-td-ink">
       <h1 className="text-[28px] leading-[1.2] font-semibold">{t.title}</h1>
-      <p className="mt-3 max-w-xl text-base leading-normal text-[#5B6270]">{t.body}</p>
+      <p className="mt-3 max-w-xl text-base leading-normal text-td-ink-2">{t.body}</p>
       <Link
         href="/patients"
         className="mt-6 inline-flex h-11 items-center rounded-full bg-[#C9F14C] px-6 text-base font-semibold text-[#0A0D12] outline-none hover:brightness-95 focus-visible:ring-3 focus-visible:ring-ring/50"

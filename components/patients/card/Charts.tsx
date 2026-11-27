@@ -25,9 +25,9 @@ import { formatGlucose } from "@/lib/patientLabels";
 import { ChartTile } from "./ChartTile";
 
 const INK = "#0A0D12";
-const MUTED = "#5B6270";
-const GRID = "#E5E7EB";
-const ZONE = "#DCFCE7";
+const MUTED = "rgba(10, 13, 18, 0.65)";
+const GRID = "rgba(10, 13, 18, 0.1)";
+const ZONE = "#C9F14C";
 const WARNING = "#92400E";
 const CRITICAL = "#B42318";
 
@@ -60,11 +60,11 @@ function BigValue({ children }: { children: ReactNode }) {
 
 function NormLegend() {
   return (
-    <p className="flex items-center gap-2 text-sm leading-normal font-normal text-[#5B6270]">
+    <p className="flex items-center gap-2 text-sm leading-normal font-normal text-td-ink-2">
       <span
         aria-hidden="true"
         className="inline-block h-3 w-5 rounded-sm"
-        style={{ backgroundColor: ZONE, opacity: 0.6 }}
+        style={{ backgroundColor: ZONE, opacity: 0.35 }}
       />
       Норма
     </p>
@@ -184,7 +184,7 @@ export function GlucoseChart({
             domain={["auto", "auto"]}
             tickFormatter={(v: number) => fmt(v)}
           />
-          <ReferenceArea y1={zone.min} y2={zone.max} fill={ZONE} fillOpacity={0.6} ifOverflow="extendDomain" />
+          <ReferenceArea y1={zone.min} y2={zone.max} fill={ZONE} fillOpacity={0.35} ifOverflow="extendDomain" />
           <ChartTooltip
             content={
               <ChartTooltipContent
@@ -255,14 +255,14 @@ export function BloodPressureChart({
             y1={ranges.systolic.min}
             y2={ranges.systolic.max}
             fill={ZONE}
-            fillOpacity={0.6}
+            fillOpacity={0.35}
             ifOverflow="extendDomain"
           />
           <ReferenceArea
             y1={ranges.diastolic.min}
             y2={ranges.diastolic.max}
             fill={ZONE}
-            fillOpacity={0.6}
+            fillOpacity={0.35}
             ifOverflow="extendDomain"
           />
           <ChartTooltip
@@ -415,7 +415,7 @@ export function StepsChart({ points, goal }: { points: { date: string; steps: nu
             ifOverflow="extendDomain"
             label={{ value: `Цель ${goalText}`, position: "insideTopRight", fill: MUTED, fontSize: 14 }}
           />
-          <Bar dataKey="steps" name="Шаги" fill={INK} isAnimationActive={false} />
+          <Bar dataKey="steps" name="Шаги" fill={INK} radius={4} isAnimationActive={false} />
         </BarChart>
       </ChartContainer>
     </ChartTile>

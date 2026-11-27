@@ -29,11 +29,11 @@ export function MealFeed({
   loadingMore,
 }: MealFeedProps) {
   return (
-    <section className="rounded-[32px] bg-[#F7F7F7] p-6 text-[#0A0D12] shadow-sm lg:col-span-2">
-      <h2 className="text-xl leading-[1.2] font-semibold">Питание</h2>
+    <section className="rounded-[36px] bg-td-tile p-6 text-td-ink lg:col-span-2">
+      <h2 className="text-base font-semibold">Питание</h2>
 
       {days.length === 0 ? (
-        <p className="mt-4 text-base leading-normal font-normal text-[#5B6270]">
+        <p className="mt-4 text-base leading-normal font-normal text-td-ink-2">
           За последние 7 дней приёмов пищи нет
         </p>
       ) : (
@@ -57,7 +57,7 @@ export function MealFeed({
                     <Progress
                       value={progress.percent}
                       aria-label="Калории за день"
-                      className="h-2 bg-[#E5E7EB] [&>*]:bg-[#0A0D12]"
+                      className="h-2 bg-white [&>*]:bg-[#0A0D12]"
                     />
                     {progress.overText ? (
                       <span className="text-sm leading-[1.4] font-semibold whitespace-nowrap tabular-nums">
@@ -66,13 +66,13 @@ export function MealFeed({
                     ) : null}
                   </div>
                 ) : null}
-                <p className="mt-2 text-sm leading-[1.4] font-normal text-[#5B6270] tabular-nums">
+                <p className="mt-2 text-sm leading-[1.4] font-normal text-td-ink-2 tabular-nums">
                   {formatMacros(day.totals)}
                   {targets
                     ? ` из ${Math.round(targets.protein)} · ${Math.round(targets.fat)} · ${Math.round(targets.carbs)}`
                     : null}
                 </p>
-                <ul className="mt-3 flex flex-col divide-y divide-[#E5E7EB]">
+                <ul className="mt-3 flex flex-col divide-y divide-black/10">
                   {day.meals.map((meal) => (
                     <li
                       key={meal.mealId}
