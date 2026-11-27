@@ -60,11 +60,11 @@ function BigValue({ children }: { children: ReactNode }) {
 
 function NormLegend() {
   return (
-    <p className="flex items-center gap-2 text-sm leading-normal font-normal text-td-ink-2">
+    <p className="inline-flex items-center gap-2 rounded-full bg-white px-3 py-1 text-xs font-semibold text-td-ink">
       <span
         aria-hidden="true"
-        className="inline-block h-3 w-5 rounded-sm"
-        style={{ backgroundColor: ZONE, opacity: 0.35 }}
+        className="inline-block h-3 w-5 rounded-sm ring-1 ring-black/20"
+        style={{ backgroundColor: ZONE, opacity: 0.7 }}
       />
       Норма
     </p>

@@ -157,33 +157,18 @@ export function Notes({ patientId, notes, onNotesChange, onAccessLost }: NotesPr
   }
 
   return (
-    <section className="rounded-[36px] bg-td-tile p-6 text-td-ink">
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <h2 className="text-base font-semibold">Заметки врача</h2>
-        {editor === null ? (
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => {
-              setDraft("");
-              setEditor({ mode: "create" });
-            }}
-            className="h-11 rounded-full border-0 bg-td-accent px-5 font-semibold text-td-ink hover:bg-td-accent hover:brightness-95"
-          >
-            <Plus aria-hidden />
-            Добавить заметку
-          </Button>
-        ) : null}
-      </div>
+    <section className="flex min-h-[416px] flex-col rounded-[36px] bg-td-tile p-6 text-td-ink">
+      <h2 className="text-base font-semibold">Заметки</h2>
 
       {editor?.mode === "create" ? <div className="mt-4">{renderEditor()}</div> : null}
 
-      {sorted.length === 0 && editor === null ? (
-        <p className="mt-4 text-base leading-normal font-normal text-td-ink-2">
-          Заметок пока нет. Добавьте первую, чтобы коллеги из клиники видели ваши наблюдения.
-        </p>
-      ) : (
-        <ul className="mt-4 flex flex-col divide-y divide-black/10">
+      <div className="flex-1">
+        {sorted.length === 0 && editor === null ? (
+          <p className="mt-4 text-base leading-normal font-normal text-td-ink-2">
+            Заметок пока нет. Добавьте первую, чтобы коллеги из клиники видели ваши наблюдения.
+          </p>
+        ) : (
+          <ul className="mt-4 flex flex-col divide-y divide-black/10">
           {sorted.map((note) => {
             const editing = editor?.mode === "edit" && editor.noteId === note.noteId;
             return (
@@ -241,8 +226,24 @@ export function Notes({ patientId, notes, onNotesChange, onAccessLost }: NotesPr
               </li>
             );
           })}
-        </ul>
-      )}
+          </ul>
+        )}
+      </div>
+
+      {editor === null ? (
+        <Button
+          type="button"
+          variant="outline"
+          onClick={() => {
+            setDraft("");
+            setEditor({ mode: "create" });
+          }}
+          className="mt-4 h-14 w-full rounded-[20px] border-0 bg-white px-5 font-semibold text-td-ink hover:bg-white hover:brightness-95"
+        >
+          <Plus aria-hidden />
+          Добавить заметку
+        </Button>
+      ) : null}
 
       <AlertDialog
         open={deleteId !== null}

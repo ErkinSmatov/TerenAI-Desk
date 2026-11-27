@@ -7,6 +7,7 @@ import { getPatientAction, type PatientCardData } from "@/app/actions/patients";
 import type { PeriodDays } from "@/lib/convexApi";
 import { statusLabel } from "@/lib/patientLabels";
 import { usePolling } from "@/lib/usePolling";
+import { PageHeader } from "@/components/cabinet/PageHeader";
 import { Alert } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
 import { CardClosed } from "./CardClosed";
@@ -137,39 +138,17 @@ export function PatientCard({
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-4">
-        <Link
-          href="/patients"
-          className="w-fit rounded-full bg-td-pill px-4 py-2 text-sm font-semibold text-td-ink outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
-        >
-          ← Пациенты
-        </Link>
-        <div className="flex flex-wrap items-center justify-between gap-4">
-          <h1 className="text-[40px] leading-[1.1] font-semibold tracking-[-0.6px] text-td-ink max-sm:text-[32px]">
-            Сводка по пациенту
-          </h1>
-          <div
-            role="group"
-            aria-label="Период графиков"
-            className="flex gap-1 rounded-full bg-td-pill p-1"
-          >
-            {PERIODS.map((p) => {
-              const selected = periodDays === p.value;
-              return (
-                <button
-                  key={p.value}
-                  type="button"
-                  aria-pressed={selected}
-                  onClick={() => setPeriodDays(p.value)}
-                  className={`h-11 rounded-full px-4 text-sm font-semibold text-td-ink outline-none transition-colors duration-150 focus-visible:ring-3 focus-visible:ring-ring/50 ${
-                    selected ? "bg-td-accent" : "hover:bg-td-badge"
-                  }`}
-                >
-                  {p.label}
-                </button>
-              );
-            })}
-          </div>
-        </div>
+        <PageHeader
+          title="Сводка по пациенту"
+          leading={
+            <Link
+              href="/"
+              className="w-fit rounded-full bg-td-pill px-4 py-2 text-sm font-semibold text-td-ink outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+            >
+              ← Главная
+            </Link>
+          }
+        />
         <div aria-live="polite" className="sr-only">
           {announcement}
         </div>
@@ -214,6 +193,31 @@ export function PatientCard({
 
           {hasAnyRecord ? (
             <>
+              <div className="flex flex-wrap items-center justify-between gap-3 lg:col-span-3">
+                <h2 className="text-xl leading-[1.2] font-semibold text-td-ink">Графики</h2>
+                <div
+                  role="group"
+                  aria-label="Период графиков"
+                  className="flex gap-1 rounded-full bg-td-pill p-1"
+                >
+                  {PERIODS.map((p) => {
+                    const selected = periodDays === p.value;
+                    return (
+                      <button
+                        key={p.value}
+                        type="button"
+                        aria-pressed={selected}
+                        onClick={() => setPeriodDays(p.value)}
+                        className={`h-11 rounded-full px-4 text-sm font-semibold text-td-ink outline-none transition-colors duration-150 focus-visible:ring-3 focus-visible:ring-ring/50 ${
+                          selected ? "bg-td-accent" : "hover:bg-td-badge"
+                        }`}
+                      >
+                        {p.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
               <GlucoseChart
                 points={series.glucose}
                 range={{
