@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Loader2 } from "lucide-react";
+import { Loader2, Plus } from "lucide-react";
 import {
   confirmPhoneAction,
   getConnectionStateAction,
@@ -56,7 +56,7 @@ function phoneResultText(status: string): string {
   return PHONE_RESULT_TEXT[status as PhoneResult] ?? PHONE_RESULT_TEXT.unavailable;
 }
 
-export function ConnectWizard() {
+export function ConnectWizard({ variant = "default" }: { variant?: "default" | "sidebar" }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [tab, setTab] = useState("phone");
@@ -384,9 +384,21 @@ export function ConnectWizard() {
       }}
     >
       <DialogTrigger asChild>
-        <Button type="button" className={PRIMARY}>
-          Подключить
-        </Button>
+        {variant === "sidebar" ? (
+          <button
+            type="button"
+            className="flex h-16 w-full items-center justify-between rounded-[40px] bg-td-accent pr-3 pl-6 text-left text-sm font-semibold text-td-ink outline-none transition-[filter] hover:brightness-95 focus-visible:ring-2 focus-visible:ring-td-ink focus-visible:ring-offset-2"
+          >
+            Подключить пациента
+            <span aria-hidden className="flex size-[38px] items-center justify-center rounded-full bg-td-ink text-td-accent">
+              <Plus className="size-5" />
+            </span>
+          </button>
+        ) : (
+          <Button type="button" className={PRIMARY}>
+            Подключить
+          </Button>
+        )}
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
