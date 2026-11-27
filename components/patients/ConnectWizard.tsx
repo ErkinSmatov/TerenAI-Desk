@@ -387,10 +387,10 @@ export function ConnectWizard({ variant = "default" }: { variant?: "default" | "
         {variant === "sidebar" ? (
           <button
             type="button"
-            className="flex h-16 w-full items-center justify-between rounded-[40px] bg-td-accent pr-3 pl-6 text-left text-sm font-semibold text-td-ink outline-none transition-[filter] hover:brightness-95 focus-visible:ring-2 focus-visible:ring-td-ink focus-visible:ring-offset-2"
+            className="flex h-16 w-full items-center justify-between rounded-[40px] bg-td-accent pr-3 pl-[25px] text-left text-base font-semibold text-td-ink outline-none transition-[filter] hover:brightness-95 focus-visible:ring-2 focus-visible:ring-td-ink focus-visible:ring-offset-2"
           >
             Подключить пациента
-            <span aria-hidden className="flex size-[38px] items-center justify-center rounded-full bg-td-ink text-td-accent">
+            <span aria-hidden className="flex size-[38px] items-center justify-center rounded-full bg-td-badge text-td-ink">
               <Plus className="size-5" />
             </span>
           </button>

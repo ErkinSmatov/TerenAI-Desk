@@ -1,5 +1,6 @@
 "use client";
 
+import type { ReactNode } from "react";
 import { UserRound } from "lucide-react";
 import { SignOutButton } from "@/components/auth/SignOutButton";
 import {
@@ -11,14 +12,24 @@ import {
 
 // Меню аккаунта в шапках кабинета и /admin. Клиентский компонент: обработчик onSelect
 // нельзя передавать из серверных компонентов (80-16).
-export function AccountMenu() {
+// С children триггером становится сам блок (профиль в сайдбаре), без отдельной иконки-кнопки.
+export function AccountMenu({
+  children,
+  triggerClassName,
+}: {
+  children?: ReactNode;
+  triggerClassName?: string;
+}) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger
         aria-label="Меню аккаунта"
-        className="flex size-11 items-center justify-center rounded-full bg-white text-[#0A0D12] shadow-sm outline-none focus-visible:ring-2 focus-visible:ring-[#0A0D12] focus-visible:ring-offset-2"
+        className={
+          triggerClassName ??
+          "flex size-11 items-center justify-center rounded-full bg-white text-[#0A0D12] shadow-sm outline-none focus-visible:ring-2 focus-visible:ring-[#0A0D12] focus-visible:ring-offset-2"
+        }
       >
-        <UserRound className="size-5" aria-hidden />
+        {children ?? <UserRound className="size-5" aria-hidden />}
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="p-2">
         <DropdownMenuItem asChild onSelect={(e) => e.preventDefault()}>
