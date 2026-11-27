@@ -83,3 +83,80 @@ const GLUCOSE_NF = new Intl.NumberFormat("ru-RU", { minimumFractionDigits: 1, ma
 export function glucoseValueText(mmol: number, unit: "mmol" | "mgdl"): string {
   return unit === "mgdl" ? String(Math.round(mmol * 18)) : GLUCOSE_NF.format(mmol);
 }
+
+// ---------- Кольцо калорий (Figma calories-ring.svg, 141x144) ----------
+
+export const RING = { size: 141, cx: 70.5, cy: 70.5, outer: 70.5, thickness: 9, arcR: 66.5 } as const;
+
+export type RingArc = {
+  // path дуги; null, если съедено 0 (дуги нет)
+  d: string | null;
+  // конец дуги, сюда ставится точка r=6; при нуле точка на старте сверху
+  end: { x: number; y: number };
+  // доля 0..1 (при превышении цели 1)
+  fraction: number;
+};
+
+const round3 = (n: number) => Math.round(n * 1000) / 1000;
+
+// Дуга стартует сверху (12 часов) и идёт по часовой стрелке. percent 0..100.
+export function ringArc(percent: number): RingArc {
+  const fraction = Math.min(1, Math.max(0, Number.isFinite(percent) ? percent / 100 : 0));
+  const { cx, cy, arcR: r } = RING;
+  const top = { x: cx, y: cy - r };
+  if (fraction === 0) return { d: null, end: top, fraction };
+  if (fraction >= 1) {
+    const bottom = { x: cx, y: cy + r };
+    return {
+      d: `M ${top.x} ${top.y} A ${r} ${r} 0 1 1 ${bottom.x} ${bottom.y} A ${r} ${r} 0 1 1 ${top.x} ${top.y}`,
+      end: top,
+      fraction,
+    };
+  }
+  const theta = 2 * Math.PI * fraction;
+  const end = { x: round3(cx + r * Math.sin(theta)), y: round3(cy - r * Math.cos(theta)) };
+  const large = fraction > 0.5 ? 1 : 0;
+  return { d: `M ${top.x} ${top.y} A ${r} ${r} 0 ${large} 1 ${end.x} ${end.y}`, end, fraction };
+}
+
+// ---------- Шкала глюкозы (14 штрихов + маркер, Figma 1494:5542) ----------
+
+export const GLUCOSE_TICKS = 14;
+
+// Сколько штрихов стоит слева от маркера (0..14). Без значения маркер в центре.
+export function glucoseMarkerSlot(value: number | null, lo = 2, hi = 14): number {
+  if (value === null) return GLUCOSE_TICKS / 2;
+  return scaleIndex(value, GLUCOSE_TICKS + 1, lo, hi);
+}
+
+// ---------- Столбики «Сахар за день» (Figma 1494:5741) ----------
+
+export const SUGAR_BAR_MIN_H = 20;
+export const SUGAR_BAR_MAX_H = 40;
+
+export type SugarBarTone = "empty" | "gap" | "target" | "alert";
+export type SugarBarView = SugarBar & { height: number; tone: SugarBarTone };
+
+// Высота нормируется по диапазону измеренных значений в 20..40px (при одном значении 30).
+// Цвет: нет измерений: empty (полупрозрачный белый, h=20), часы без измерений между первым и
+// последним измеренным: gap (белый, h=20), норма: target (лайм), вне нормы (выше и ниже): alert.
+export function sugarBarViews(bars: SugarBar[]): SugarBarView[] {
+  const measured = bars.filter((b) => b.mmol !== null);
+  if (measured.length === 0) {
+    return bars.map((b) => ({ ...b, height: SUGAR_BAR_MIN_H, tone: "empty" as const }));
+  }
+  const values = measured.map((b) => b.mmol as number);
+  const lo = Math.min(...values);
+  const hi = Math.max(...values);
+  const first = measured[0].hour;
+  const last = measured[measured.length - 1].hour;
+  return bars.map((b) => {
+    if (b.mmol === null) {
+      const inside = b.hour > first && b.hour < last;
+      return { ...b, height: SUGAR_BAR_MIN_H, tone: inside ? ("gap" as const) : ("empty" as const) };
+    }
+    const ratio = hi === lo ? 0.5 : (b.mmol - lo) / (hi - lo);
+    const height = Math.round((SUGAR_BAR_MIN_H + ratio * (SUGAR_BAR_MAX_H - SUGAR_BAR_MIN_H)) * 100) / 100;
+    return { ...b, height, tone: b.zone === "target" ? ("target" as const) : ("alert" as const) };
+  });
+}

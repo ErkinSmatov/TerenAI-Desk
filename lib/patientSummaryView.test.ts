@@ -1,6 +1,16 @@
 import { describe, expect, it } from "vitest";
 import type { GlucosePoint, MealDay } from "./convexApi";
-import { barPercent, caloriesSummary, glucoseExtremes, glucoseValueText, scaleIndex, sugarByHour } from "./patientSummaryView";
+import {
+  barPercent,
+  caloriesSummary,
+  glucoseExtremes,
+  glucoseMarkerSlot,
+  glucoseValueText,
+  ringArc,
+  scaleIndex,
+  sugarBarViews,
+  sugarByHour,
+} from "./patientSummaryView";
 
 function pt(t: number, mmol: number): GlucosePoint {
   return { t, mmol, mgdl: mmol * 18, minMmol: null, maxMmol: null, status: "ok" };
@@ -76,5 +86,68 @@ describe("glucoseValueText", () => {
     expect(glucoseValueText(5.55, "mmol")).toBe("5,6");
     expect(glucoseValueText(5, "mmol")).toBe("5,0");
     expect(glucoseValueText(5.5, "mgdl")).toBe("99");
+  });
+});
+
+describe("ringArc", () => {
+  it("0%: дуги нет, точка на старте сверху", () => {
+    expect(ringArc(0)).toMatchObject({ d: null, end: { x: 70.5, y: 4 }, fraction: 0 });
+  });
+  it("50%: конец внизу, дуга не «большая»", () => {
+    const a = ringArc(50);
+    expect(a.end.x).toBeCloseTo(70.5, 2);
+    expect(a.end.y).toBeCloseTo(137, 2);
+    expect(a.d).toContain("A 66.5 66.5 0 0 1");
+  });
+  it("25%: конец справа", () => {
+    const a = ringArc(25);
+    expect(a.end.x).toBeCloseTo(137, 2);
+    expect(a.end.y).toBeCloseTo(70.5, 2);
+  });
+  it("75%: большая дуга", () => {
+    expect(ringArc(75).d).toContain("0 1 1");
+  });
+  it("100% и перебор: полное кольцо; мусор: 0", () => {
+    expect(ringArc(100).fraction).toBe(1);
+    expect(ringArc(250).fraction).toBe(1);
+    expect(ringArc(250).d).not.toBeNull();
+    expect(ringArc(-5).d).toBeNull();
+    expect(ringArc(Number.NaN).d).toBeNull();
+  });
+});
+
+describe("glucoseMarkerSlot", () => {
+  it("без данных по центру, иначе в границах 0..14", () => {
+    expect(glucoseMarkerSlot(null)).toBe(7);
+    expect(glucoseMarkerSlot(1)).toBe(0);
+    expect(glucoseMarkerSlot(30)).toBe(14);
+    expect(glucoseMarkerSlot(8)).toBe(7);
+  });
+});
+
+describe("sugarBarViews", () => {
+  it("без данных: 24 заглушки h=20", () => {
+    const v = sugarBarViews(sugarByHour([], NOW, 0, ZONE));
+    expect(v).toHaveLength(24);
+    expect(v.every((b) => b.height === 20 && b.tone === "empty")).toBe(true);
+  });
+  it("высоты нормируются 20..40, цвета по зоне, пропуски внутри суток белые", () => {
+    const bars = sugarByHour(
+      [pt(NOW - 3_600_000, 5), pt(NOW - 3 * 3_600_000, 9), pt(NOW - 4 * 3_600_000, 3)],
+      NOW,
+      0,
+      ZONE,
+    );
+    const v = sugarBarViews(bars);
+    expect(v[8]).toMatchObject({ height: 20, tone: "alert" }); // 3: ниже нормы, минимум
+    expect(v[9]).toMatchObject({ height: 40, tone: "alert" }); // 9: максимум, выше нормы
+    expect(v[10]).toMatchObject({ height: 20, tone: "gap" });
+    expect(v[11]).toMatchObject({ height: 26.67, tone: "target" }); // 5: треть диапазона 3..9
+    expect(v[0]).toMatchObject({ height: 20, tone: "empty" });
+    expect(v[23]).toMatchObject({ tone: "empty" });
+  });
+  it("одно значение: h=30", () => {
+    const v = sugarBarViews(sugarByHour([pt(NOW - 3_600_000, 5)], NOW, 0, ZONE));
+    expect(v[11].height).toBe(30);
   });
 });
