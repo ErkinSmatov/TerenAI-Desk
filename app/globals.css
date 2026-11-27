@@ -121,8 +121,11 @@
   --td-fat: linear-gradient(90deg, #fff, #8489DA);
   --td-carbs: linear-gradient(90deg, #fff, #F47F6E);
   --td-steps: linear-gradient(90deg, #F7F1E3, #C9F14C);
-  --td-glucose-low: #5EA04B;
-  --td-glucose-high: #B74244;
+  /* Заливки Низкий/Высокий затемнены относительно макета (#5EA04B / #B74244) ради AA для текста #F3F5F9:
+     у светло-зелёного контраст 2,9:1, у красного с белым свечением ниже 4,5:1. Свечение ослаблено до 30%. */
+  --td-glucose-low: #3D6831;
+  --td-glucose-high: #923536;
+  --td-glucose-glow: inset 0 0 62px rgba(255, 255, 255, 0.3);
   --td-bar-norm: #FFFEFD;
   --td-bar-target: #C9F14C;
   --td-bar-high: #FCA4A4;

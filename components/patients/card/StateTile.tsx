@@ -17,11 +17,24 @@ function formatLastRecord(ms: number, now: Date): string {
 }
 
 // Содержимое блока «Состояние» внутри плитки пациента: причина статуса и время последней записи.
-export function StateTile({ status, approximate }: { status: PatientStatus; approximate: boolean }) {
+export function StateTile({
+  status,
+  approximate,
+  compact = false,
+}: {
+  status: PatientStatus;
+  approximate: boolean;
+  compact?: boolean;
+}) {
   return (
     <div className="flex flex-col gap-1">
-      <p className="text-sm leading-normal font-normal">{reasonText(status.reason)}</p>
-      <p className="text-sm leading-normal font-normal text-td-ink-2 tabular-nums" suppressHydrationWarning>
+      <p className={compact ? "text-xs leading-snug" : "text-sm leading-normal font-normal"}>
+        {reasonText(status.reason)}
+      </p>
+      <p
+        className={`${compact ? "text-xs" : "text-sm"} leading-normal font-normal text-td-ink-2 tabular-nums`}
+        suppressHydrationWarning
+      >
         Последняя запись:{" "}
         {status.lastRecordAt === null ? "нет записей" : formatLastRecord(status.lastRecordAt, new Date())}
       </p>
