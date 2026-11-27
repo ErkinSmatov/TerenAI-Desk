@@ -3,12 +3,13 @@
 import { useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Activity, Droplet, Search } from "lucide-react";
+import { Footprints, Search } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { listPatientsAction, type PatientListData } from "@/app/actions/patients";
-import type { BpSample, GlucoseSample, PatientListRow } from "@/lib/convexApi";
+import type { GlucoseSample, PatientListRow } from "@/lib/convexApi";
 import { countPatients, filterPatients, paginate, relativeTime, sortPatients, type SortMode } from "@/lib/patientListView";
-import { formatGlucose } from "@/lib/patientLabels";
+import { barPercent, glucoseValueText } from "@/lib/patientSummaryView";
+import { formatNumberRu } from "@/lib/mealFeedView";
 import { usePolling } from "@/lib/usePolling";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -16,6 +17,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Avatar } from "./Avatar";
 import { HealthStatusBadge } from "./HealthStatusBadge";
+import { CalorieRing, MACRO_GRADIENT, MacroBar } from "./NutritionParts";
 
 const MGDL_PER_MMOL = 18;
 
@@ -36,11 +38,7 @@ const SORT_LABELS: Record<SortMode, string> = {
 
 function glucoseText(sample: GlucoseSample): string {
   const mmol = sample.unit === "mg/dL" ? sample.value / MGDL_PER_MMOL : sample.value;
-  return formatGlucose(mmol, mmol * MGDL_PER_MMOL, "mmol");
-}
-
-function bpText(sample: BpSample): string {
-  return `${sample.systolic}/${sample.diastolic}`;
+  return glucoseValueText(mmol, "mmol");
 }
 
 function noDataDays(row: PatientListRow): number | undefined {
@@ -67,17 +65,116 @@ function CounterRow({ rows }: { rows: PatientListRow[] }) {
     { label: "Нет данных", value: c.noData, cls: "bg-td-pill" },
   ];
   return (
-    <ul aria-label="Сводка по пациентам" className="flex flex-wrap gap-3">
+    <ul aria-label="Сводка по пациентам" className="flex flex-wrap items-center gap-x-8 gap-y-3">
       {items.map((i) => (
-        <li
-          key={i.label}
-          className={cn("flex items-center gap-3 rounded-[24px] px-5 py-3 text-td-ink", i.cls)}
-        >
+        <li key={i.label} className="flex items-center gap-3 text-td-ink">
           <span className="td-num text-[40px] leading-none font-medium">{i.value}</span>
-          <span className="text-sm font-semibold">{i.label}</span>
+          <span className={cn("rounded-[12px] px-3 py-1.5 text-xs font-semibold", i.cls)}>
+            {i.label}
+          </span>
         </li>
       ))}
     </ul>
+  );
+}
+
+const BLOCK_SHADOW_TOP = { boxShadow: "var(--td-shadow-critical-top)" };
+const BLOCK_SHADOW_BOTTOM = { boxShadow: "var(--td-shadow-critical-bottom)" };
+
+// Карточка пациента: два слитых блока радиусом 24px (макет 1479:719).
+function PatientCardTile({ row, now }: { row: PatientListRow; now: number }) {
+  const last = lastDataText(row, now);
+  const critical = row.status.status === "critical";
+  const remaining = row.caloriesGoal === null ? null : Math.round(row.caloriesGoal - row.caloriesEaten);
+  const caloriesPct = row.caloriesGoal === null ? 0 : barPercent(row.caloriesEaten, row.caloriesGoal);
+  const stepsPct = barPercent(row.steps, row.stepsGoal);
+  const goals = row.macroGoals;
+  const goal = (v: number | undefined) => (v === undefined ? null : Math.round(v));
+  return (
+    <li className="relative flex flex-col rounded-[24px] has-[a:focus-visible]:ring-3 has-[a:focus-visible]:ring-ring/50">
+      <div
+        className="flex flex-col gap-4 rounded-t-[24px] bg-td-tile p-5"
+        style={critical ? BLOCK_SHADOW_TOP : undefined}
+      >
+        <div className="flex items-center gap-3">
+          <Avatar name={row.displayName} />
+          <div className="flex min-w-0 flex-1 flex-col items-start gap-1.5">
+            <Link
+              href={`/patients/${row.patientId}`}
+              className="max-w-full truncate text-base font-semibold outline-none after:absolute after:inset-0 after:content-['']"
+            >
+              {row.displayName}
+            </Link>
+            <HealthStatusBadge status={row.status.status} noDataDays={noDataDays(row)} compact />
+          </div>
+        </div>
+        <div className="grid grid-cols-[auto_1fr_auto] items-center gap-3">
+          <div className="flex flex-col">
+            <span className="text-[11px] font-semibold text-td-ink-2">Калорий</span>
+            <span className="td-num text-xl leading-tight font-medium">
+              {formatNumberRu(row.caloriesEaten)}
+            </span>
+          </div>
+          <div className="flex min-w-0 flex-col gap-1">
+            <div className="flex items-center gap-1.5">
+              <Footprints className="size-4 shrink-0 text-td-ink-2" aria-hidden />
+              <div
+                role="progressbar"
+                aria-label="Шаги"
+                aria-valuemin={0}
+                aria-valuemax={100}
+                aria-valuenow={Math.round(stepsPct)}
+                className="flex h-[9px] flex-1 items-center rounded-full bg-white px-[2px]"
+              >
+                {stepsPct > 0 ? (
+                  <div
+                    className="h-[5px] rounded-full"
+                    style={{ width: `${stepsPct}%`, background: "var(--td-steps)" }}
+                  />
+                ) : null}
+              </div>
+            </div>
+            <span className="td-num text-center text-[11px] text-td-ink-2">
+              {formatNumberRu(row.steps)} / {formatNumberRu(row.stepsGoal)} шагов
+            </span>
+          </div>
+          <div className="flex flex-col items-end">
+            <span className="text-[11px] font-semibold text-td-ink-2">Глюкоза</span>
+            <span className="td-num text-xl leading-tight font-medium">
+              {row.lastGlucose ? glucoseText(row.lastGlucose) : "—"}
+            </span>
+          </div>
+        </div>
+      </div>
+      <div
+        className="flex flex-col gap-3 rounded-b-[24px] bg-td-tile px-5 pt-1 pb-5"
+        style={critical ? BLOCK_SHADOW_BOTTOM : undefined}
+      >
+        <div className="flex items-center gap-4">
+          <div className="flex flex-col gap-1">
+            <span className="text-base font-semibold">Калории</span>
+            <span className="text-[11px] text-td-ink-2" title={last.title} suppressHydrationWarning>
+              {last.text}
+            </span>
+          </div>
+          <div className="ml-auto">
+            <CalorieRing
+              size={92}
+              stroke={10}
+              percent={caloriesPct}
+              remaining={remaining}
+              numClass="text-xl"
+              labelClass="text-[11px]"
+            />
+          </div>
+        </div>
+        <div className="grid grid-cols-3 gap-3">
+          <MacroBar label="Белки" value={row.macros.protein} target={goal(goals?.protein)} gradient={MACRO_GRADIENT.protein} />
+          <MacroBar label="Жиры" value={row.macros.fat} target={goal(goals?.fat)} gradient={MACRO_GRADIENT.fat} />
+          <MacroBar label="Углеводы" value={row.macros.carbs} target={goal(goals?.carbs)} gradient={MACRO_GRADIENT.carbs} />
+        </div>
+      </div>
+    </li>
   );
 }
 
@@ -135,7 +232,7 @@ export function PatientList({ initialData }: { initialData: PatientListData }) {
   return (
     <div ref={containerRef} onFocus={handleFocus} onBlur={handleBlur} className="flex flex-col gap-5">
       <CounterRow rows={data.rows} />
-      <p className="text-sm text-td-ink-2" suppressHydrationWarning>
+      <p className="-mt-3 text-xs text-td-ink-3" suppressHydrationWarning>
         Обновлено {updatedAt}
       </p>
 
@@ -148,7 +245,7 @@ export function PatientList({ initialData }: { initialData: PatientListData }) {
       ) : null}
 
       {data.rows.length === 0 ? (
-        <div className="rounded-[36px] bg-td-tile p-8 text-td-ink">
+        <div className="rounded-[24px] bg-td-tile p-8 text-td-ink">
           <h3 className="text-xl leading-[1.2] font-semibold">Активных пациентов пока нет</h3>
           <p className="mt-3 max-w-xl text-base leading-normal text-td-ink-2">
             Пациент появится здесь, когда подтвердит подключение к вам. Подключить пациента можно
@@ -157,8 +254,8 @@ export function PatientList({ initialData }: { initialData: PatientListData }) {
         </div>
       ) : (
         <>
-          <div className="flex flex-col gap-3 sm:flex-row">
-            <div className="relative flex-1">
+          <div className="flex flex-col gap-3 sm:flex-row sm:justify-end">
+            <div className="relative sm:w-72">
               <Search
                 className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-td-ink-2"
                 aria-hidden
@@ -172,7 +269,7 @@ export function PatientList({ initialData }: { initialData: PatientListData }) {
                 }}
                 placeholder="Поиск по имени"
                 aria-label="Поиск по имени"
-                className="h-11 rounded-full border-0 bg-td-pill pl-9"
+                className="h-10 rounded-full border-0 bg-td-pill pl-9 text-sm"
               />
             </div>
             <Select
@@ -182,7 +279,7 @@ export function PatientList({ initialData }: { initialData: PatientListData }) {
                 setPage(1);
               }}
             >
-              <SelectTrigger className="h-11 w-full rounded-full border-0 bg-td-pill sm:w-60" aria-label="Сортировка">
+              <SelectTrigger className="h-10 w-full rounded-full border-0 bg-td-pill text-sm sm:w-56" aria-label="Сортировка">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -201,64 +298,10 @@ export function PatientList({ initialData }: { initialData: PatientListData }) {
             </p>
           ) : (
             <>
-              <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 2xl:grid-cols-3">
-                {items.map((row) => {
-                  const last = lastDataText(row, now);
-                  const critical = row.status.status === "critical";
-                  return (
-                    <li
-                      key={row.patientId}
-                      className="relative flex flex-col gap-1 has-[a:focus-visible]:ring-3 has-[a:focus-visible]:ring-ring/50 rounded-3xl"
-                    >
-                      <div
-                        className="flex flex-col gap-4 rounded-t-3xl rounded-b-lg bg-td-tile p-5"
-                        style={critical ? { boxShadow: "var(--td-shadow-critical-top)" } : undefined}
-                      >
-                        <div className="flex items-center gap-3">
-                          <Avatar name={row.displayName} />
-                          <Link
-                            href={`/patients/${row.patientId}`}
-                            className="min-w-0 flex-1 truncate text-base font-semibold outline-none after:absolute after:inset-0 after:content-['']"
-                          >
-                            {row.displayName}
-                          </Link>
-                        </div>
-                        <div className="flex items-center justify-between gap-3 rounded-2xl bg-td-badge px-4 py-3">
-                          <span className="flex items-center gap-2 text-xs font-medium text-td-ink-2">
-                            <Droplet className="size-4" aria-hidden />
-                            Глюкоза
-                          </span>
-                          <span className="td-num text-xl font-medium">
-                            {row.lastGlucose ? glucoseText(row.lastGlucose) : "—"}
-                          </span>
-                        </div>
-                        <div className="flex items-center justify-between gap-3 rounded-2xl bg-td-badge px-4 py-3">
-                          <span className="flex items-center gap-2 text-xs font-medium text-td-ink-2">
-                            <Activity className="size-4" aria-hidden />
-                            Давление
-                          </span>
-                          <span className="td-num text-xl font-medium">
-                            {row.lastBloodPressure ? bpText(row.lastBloodPressure) : "—"}
-                          </span>
-                        </div>
-                      </div>
-                      <div
-                        className="flex flex-wrap items-center justify-between gap-2 rounded-t-lg rounded-b-3xl bg-td-tile px-5 py-4"
-                        style={critical ? { boxShadow: "var(--td-shadow-critical-bottom)" } : undefined}
-                      >
-                        <HealthStatusBadge
-                          status={row.status.status}
-                          noDataDays={noDataDays(row)}
-                        />
-                        <span className="text-xs text-td-ink-2">
-                          <span title={last.title} suppressHydrationWarning>
-                            {last.text}
-                          </span>
-                        </span>
-                      </div>
-                    </li>
-                  );
-                })}
+              <ul className="grid grid-cols-1 gap-4 md:grid-cols-2 2xl:grid-cols-3">
+                {items.map((row) => (
+                  <PatientCardTile key={row.patientId} row={row} now={now} />
+                ))}
               </ul>
 
               {pages > 1 ? (

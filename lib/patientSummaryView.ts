@@ -76,3 +76,10 @@ export function scaleIndex(value: number, count: number, lo = 2, hi = 14): numbe
   const ratio = (value - lo) / (hi - lo);
   return Math.min(count - 1, Math.max(0, Math.round(ratio * (count - 1))));
 }
+
+const GLUCOSE_NF = new Intl.NumberFormat("ru-RU", { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+
+// Число глюкозы без единицы (единица выводится отдельной подписью): ммоль/л с одним знаком, мг/дл целое.
+export function glucoseValueText(mmol: number, unit: "mmol" | "mgdl"): string {
+  return unit === "mgdl" ? String(Math.round(mmol * 18)) : GLUCOSE_NF.format(mmol);
+}

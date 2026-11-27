@@ -20,16 +20,20 @@ const STATUS_ICON: Record<HealthStatus, LucideIcon> = {
 export function HealthStatusBadge({
   status,
   noDataDays,
+  compact = false,
 }: {
   status: HealthStatus;
   noDataDays?: number;
+  compact?: boolean;
 }) {
   const Icon = STATUS_ICON[status];
   return (
     <span
-      className={`inline-flex h-7 items-center gap-1 rounded-full px-3 text-sm font-semibold ${STATUS_CLASS[status]}`}
+      className={`inline-flex items-center gap-1 font-semibold ${
+        compact ? "h-6 rounded-[12px] px-2.5 text-xs" : "h-7 rounded-full px-3 text-sm"
+      } ${STATUS_CLASS[status]}`}
     >
-      <Icon className="size-4 shrink-0" aria-hidden />
+      <Icon className={compact ? "size-3.5 shrink-0" : "size-4 shrink-0"} aria-hidden />
       {statusLabel(status, noDataDays)}
     </span>
   );

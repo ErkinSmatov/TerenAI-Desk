@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { GlucosePoint, MealDay } from "./convexApi";
-import { barPercent, caloriesSummary, glucoseExtremes, scaleIndex, sugarByHour } from "./patientSummaryView";
+import { barPercent, caloriesSummary, glucoseExtremes, glucoseValueText, scaleIndex, sugarByHour } from "./patientSummaryView";
 
 function pt(t: number, mmol: number): GlucosePoint {
   return { t, mmol, mgdl: mmol * 18, minMmol: null, maxMmol: null, status: "ok" };
@@ -68,5 +68,13 @@ describe("barPercent / scaleIndex", () => {
     expect(scaleIndex(1, 24)).toBe(0);
     expect(scaleIndex(20, 24)).toBe(23);
     expect(scaleIndex(8, 25)).toBe(12);
+  });
+});
+
+describe("glucoseValueText", () => {
+  it("ммоль/л с запятой и одним знаком, мг/дл целое", () => {
+    expect(glucoseValueText(5.55, "mmol")).toBe("5,6");
+    expect(glucoseValueText(5, "mmol")).toBe("5,0");
+    expect(glucoseValueText(5.5, "mgdl")).toBe("99");
   });
 });
