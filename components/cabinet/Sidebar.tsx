@@ -1,4 +1,5 @@
 import type { ClinicRole } from "@/lib/convexApi";
+import { initialsOf } from "@/lib/patientListView";
 import { clinicRoleLabel } from "@/lib/labels";
 import { CabinetNav } from "@/components/cabinet/CabinetNav";
 import { AccountMenu } from "@/components/auth/AccountMenu";
@@ -9,12 +10,6 @@ type SidebarProfile = {
   clinicName: string | null;
   clinicRole: ClinicRole | null;
 };
-
-function initials(fullName: string): string {
-  const parts = fullName.trim().split(/\s+/).filter(Boolean);
-  const letters = parts.slice(0, 2).map((p) => Array.from(p)[0]?.toUpperCase() ?? "");
-  return letters.join("") || "?";
-}
 
 // Левый сайдбар 273px (десктоп). На узких экранах превращается в верхнюю панель.
 export function Sidebar({ profile }: { profile: SidebarProfile }) {
@@ -35,7 +30,7 @@ export function Sidebar({ profile }: { profile: SidebarProfile }) {
             aria-hidden
             className="flex size-[60px] shrink-0 items-center justify-center rounded-full bg-td-accent text-lg font-semibold"
           >
-            {initials(profile.fullName)}
+            {initialsOf(profile.fullName)}
           </span>
           <div className="min-w-0 flex-1">
             <p className="truncate text-sm font-semibold">{profile.fullName}</p>

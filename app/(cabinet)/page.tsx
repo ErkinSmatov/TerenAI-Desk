@@ -5,7 +5,7 @@ import { api } from "@/lib/convexApi";
 import { routeForStage } from "@/lib/stage";
 import { PendingScreen } from "@/components/cabinet/PendingScreen";
 import { RejectedScreen } from "@/components/cabinet/RejectedScreen";
-import { VerifiedEmpty } from "@/components/cabinet/VerifiedEmpty";
+import { PatientsOverview } from "@/components/patients/PatientsOverview";
 
 export const metadata: Metadata = { title: "Кабинет" };
 
@@ -22,6 +22,6 @@ export default async function CabinetPage() {
     case "rejected":
       return <RejectedScreen />;
     case "verified":
-      return <VerifiedEmpty />;
+      return <PatientsOverview title="Главная" isHome />;
   }
 }

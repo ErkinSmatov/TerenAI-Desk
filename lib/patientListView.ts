@@ -66,3 +66,45 @@ export function relativeTime(ms: number, now: number): string {
   if (hours < 24) return `${hours} ч назад`;
   return `${Math.floor(hours / 24)} дн. назад`;
 }
+
+export type PatientCounts = {
+  total: number;
+  optimal: number;
+  critical: number;
+  attention: number;
+  noData: number;
+};
+
+// Счётчики верхней строки «Главной»: ok → оптимальные, warning → на рассмотрении, critical → критичные.
+// «Нет данных» считается отдельно и в три категории не попадает; total включает всех.
+export function countPatients(rows: PatientListRow[]): PatientCounts {
+  const counts: PatientCounts = { total: rows.length, optimal: 0, critical: 0, attention: 0, noData: 0 };
+  for (const r of rows) {
+    switch (r.status.status) {
+      case "ok":
+        counts.optimal += 1;
+        break;
+      case "warning":
+        counts.attention += 1;
+        break;
+      case "critical":
+        counts.critical += 1;
+        break;
+      case "no_data":
+        counts.noData += 1;
+        break;
+    }
+  }
+  return counts;
+}
+
+// Инициалы для аватара без фото (D-04): до двух первых букв слов имени.
+export function initialsOf(name: string): string {
+  const letters = name
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((w) => Array.from(w)[0]?.toUpperCase() ?? "");
+  return letters.join("") || "?";
+}

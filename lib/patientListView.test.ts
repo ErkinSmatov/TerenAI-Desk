@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { HealthStatus, PatientListRow } from "./convexApi";
-import { filterPatients, paginate, relativeTime, sortPatients } from "./patientListView";
+import { countPatients, filterPatients, initialsOf, paginate, relativeTime, sortPatients } from "./patientListView";
 
 function row(displayName: string, status: HealthStatus, lastRecordAt: number | null = 1000): PatientListRow {
   return {
@@ -65,4 +65,22 @@ describe("relativeTime", () => {
   it("минуты", () => expect(relativeTime(now - 12 * 60_000, now)).toBe("12 мин назад"));
   it("часы", () => expect(relativeTime(now - (130 * 60_000), now)).toBe("2 ч назад"));
   it("дни", () => expect(relativeTime(now - 3 * 86_400_000, now)).toBe("3 дн. назад"));
+});
+
+describe("countPatients", () => {
+  it("раскладывает по статусам, «нет данных» отдельно", () => {
+    const rows = [row("А", "ok"), row("Б", "ok"), row("В", "critical"), row("Г", "warning"), row("Д", "no_data")];
+    expect(countPatients(rows)).toEqual({ total: 5, optimal: 2, critical: 1, attention: 1, noData: 1 });
+  });
+  it("пустой список", () => {
+    expect(countPatients([])).toEqual({ total: 0, optimal: 0, critical: 0, attention: 0, noData: 0 });
+  });
+});
+
+describe("initialsOf", () => {
+  it("берёт первые буквы двух слов", () => {
+    expect(initialsOf("анна Ким Ли")).toBe("АК");
+    expect(initialsOf("Борис")).toBe("Б");
+    expect(initialsOf("  ")).toBe("?");
+  });
 });

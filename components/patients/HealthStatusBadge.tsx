@@ -6,7 +6,7 @@ import { statusLabel } from "@/lib/patientLabels";
 const STATUS_CLASS: Record<HealthStatus, string> = {
   ok: "bg-[#DCFCE7] text-[#166534]",
   warning: "bg-[#FEF3C7] text-[#92400E]",
-  critical: "bg-[#FEE2E2] text-[#B42318]",
+  critical: "bg-[#FEE2E2] text-[#B42318] shadow-[inset_0_0_12px_rgba(228,0,5,0.25)]",
   no_data: "bg-[#F4F5F7] text-[#5B6270]",
 };
 
