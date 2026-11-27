@@ -275,6 +275,13 @@ export type PatientListRow = {
   approximate: boolean;
   lastGlucose: GlucoseSample | null;
   lastBloodPressure: BpSample | null;
+  // Прогресс за сегодня (82-15): цели null, пока у пациента нет профиля.
+  caloriesEaten: number;
+  caloriesGoal: number | null;
+  macros: { protein: number; fat: number; carbs: number };
+  macroGoals: { protein: number; fat: number; carbs: number } | null;
+  steps: number;
+  stepsGoal: number;
 };
 export type PatientListResult =
   | Denied

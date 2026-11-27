@@ -10,6 +10,12 @@ function row(displayName: string, status: HealthStatus, lastRecordAt: number | n
     approximate: false,
     lastGlucose: null,
     lastBloodPressure: null,
+    caloriesEaten: 0,
+    caloriesGoal: null,
+    macros: { protein: 0, fat: 0, carbs: 0 },
+    macroGoals: null,
+    steps: 0,
+    stepsGoal: 8000,
   };
 }
 
