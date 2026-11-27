@@ -3,7 +3,7 @@
 import { useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Footprints, Search } from "lucide-react";
+import { Search } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { listPatientsAction, type PatientListData } from "@/app/actions/patients";
 import type { GlucoseSample, PatientListRow } from "@/lib/convexApi";
@@ -17,7 +17,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Avatar } from "./Avatar";
 import { HealthStatusBadge } from "./HealthStatusBadge";
-import { CalorieRing, MACRO_GRADIENT, MacroBar } from "./NutritionParts";
+import { CalorieRing, MACRO_GRADIENT, MacroBar, StepsBlock } from "./NutritionParts";
 
 const MGDL_PER_MMOL = 18;
 
@@ -81,65 +81,41 @@ function CounterRow({ rows }: { rows: PatientListRow[] }) {
 const BLOCK_SHADOW_TOP = { boxShadow: "var(--td-shadow-critical-top)" };
 const BLOCK_SHADOW_BOTTOM = { boxShadow: "var(--td-shadow-critical-bottom)" };
 
-// Карточка пациента: два слитых блока радиусом 24px (макет 1479:719).
+// Карточка пациента: два отдельных блока 24px, нижний заходит на верхний на 5px (макет 1483:869, 1494:960).
 function PatientCardTile({ row, now }: { row: PatientListRow; now: number }) {
   const last = lastDataText(row, now);
   const critical = row.status.status === "critical";
   const remaining = row.caloriesGoal === null ? null : Math.round(row.caloriesGoal - row.caloriesEaten);
   const caloriesPct = row.caloriesGoal === null ? 0 : barPercent(row.caloriesEaten, row.caloriesGoal);
-  const stepsPct = barPercent(row.steps, row.stepsGoal);
   const goals = row.macroGoals;
   const goal = (v: number | undefined) => (v === undefined ? null : Math.round(v));
   return (
-    <li className="relative flex flex-col rounded-[24px] has-[a:focus-visible]:ring-3 has-[a:focus-visible]:ring-ring/50">
+    <li
+      className="relative flex flex-col has-[a:focus-visible]:rounded-[24px] has-[a:focus-visible]:ring-3 has-[a:focus-visible]:ring-ring/50"
+      title={last.title ? `Последние данные: ${last.text} (${last.title})` : undefined}
+    >
       <div
-        className="flex flex-col gap-4 rounded-t-[24px] bg-td-tile p-5"
+        className="flex flex-col gap-4 rounded-[24px] bg-td-tile p-5"
         style={critical ? BLOCK_SHADOW_TOP : undefined}
       >
-        <div className="flex items-center gap-3">
-          <Avatar name={row.displayName} />
-          <div className="flex min-w-0 flex-1 flex-col items-start gap-1.5">
-            <Link
-              href={`/patients/${row.patientId}`}
-              className="max-w-full truncate text-base font-semibold outline-none after:absolute after:inset-0 after:content-['']"
-            >
-              {row.displayName}
-            </Link>
-            <HealthStatusBadge status={row.status.status} noDataDays={noDataDays(row)} compact />
-          </div>
+        <div className="flex items-center gap-2">
+          <Avatar name={row.displayName} className="text-2xl font-bold" />
+          <Link
+            href={`/patients/${row.patientId}`}
+            className="min-w-0 flex-1 truncate text-base font-semibold outline-none after:absolute after:inset-0 after:content-['']"
+          >
+            {row.displayName}
+          </Link>
+          <HealthStatusBadge status={row.status.status} noDataDays={noDataDays(row)} compact />
         </div>
-        <div className="grid grid-cols-[auto_1fr_auto] items-center gap-3">
-          <div className="flex flex-col">
-            <span className="text-[11px] font-semibold text-td-ink-2">Калорий</span>
-            <span className="td-num text-xl leading-tight font-medium">
-              {formatNumberRu(row.caloriesEaten)}
-            </span>
+        <div className="flex items-center justify-between">
+          <div className="flex w-[62px] shrink-0 flex-col">
+            <span className="text-[11px] text-td-ink-2">Калорий</span>
+            <span className="td-num text-xl leading-tight font-medium">{formatNumberRu(row.caloriesEaten)}</span>
           </div>
-          <div className="flex min-w-0 flex-col gap-1">
-            <div className="flex items-center gap-1.5">
-              <Footprints className="size-4 shrink-0 text-td-ink-2" aria-hidden />
-              <div
-                role="progressbar"
-                aria-label="Шаги"
-                aria-valuemin={0}
-                aria-valuemax={100}
-                aria-valuenow={Math.round(stepsPct)}
-                className="flex h-[9px] flex-1 items-center rounded-full bg-white px-[2px]"
-              >
-                {stepsPct > 0 ? (
-                  <div
-                    className="h-[5px] rounded-full"
-                    style={{ width: `${stepsPct}%`, background: "var(--td-steps)" }}
-                  />
-                ) : null}
-              </div>
-            </div>
-            <span className="td-num text-center text-[11px] text-td-ink-2">
-              {formatNumberRu(row.steps)} / {formatNumberRu(row.stepsGoal)} шагов
-            </span>
-          </div>
-          <div className="flex flex-col items-end">
-            <span className="text-[11px] font-semibold text-td-ink-2">Глюкоза</span>
+          <StepsBlock steps={row.steps} goal={row.stepsGoal} />
+          <div className="flex w-[62px] shrink-0 flex-col items-end">
+            <span className="text-[11px] text-td-ink-2">Глюкоза</span>
             <span className="td-num text-xl leading-tight font-medium">
               {row.lastGlucose ? glucoseText(row.lastGlucose) : "—"}
             </span>
@@ -147,31 +123,17 @@ function PatientCardTile({ row, now }: { row: PatientListRow; now: number }) {
         </div>
       </div>
       <div
-        className="flex flex-col gap-3 rounded-b-[24px] bg-td-tile px-5 pt-1 pb-5"
+        className="relative -mt-[5px] flex min-h-[212px] flex-col rounded-[24px] bg-td-tile px-[14px] pt-[13px] pb-[14px]"
         style={critical ? BLOCK_SHADOW_BOTTOM : undefined}
       >
-        <div className="flex items-center gap-4">
-          <div className="flex flex-col gap-1">
-            <span className="text-base font-semibold">Калории</span>
-            <span className="text-[11px] text-td-ink-2" title={last.title} suppressHydrationWarning>
-              {last.text}
-            </span>
+        <span className="text-base font-semibold text-[#0C0D12]">Калории</span>
+        <div className="flex flex-1 items-center justify-between gap-3">
+          <CalorieRing percent={caloriesPct} remaining={remaining} />
+          <div className="flex min-w-0 flex-1 flex-col items-end gap-4">
+            <MacroBar label="Белки" value={row.macros.protein} target={goal(goals?.protein)} gradient={MACRO_GRADIENT.protein} />
+            <MacroBar label="Жиры" value={row.macros.fat} target={goal(goals?.fat)} gradient={MACRO_GRADIENT.fat} />
+            <MacroBar label="Углеводы" value={row.macros.carbs} target={goal(goals?.carbs)} gradient={MACRO_GRADIENT.carbs} />
           </div>
-          <div className="ml-auto">
-            <CalorieRing
-              size={92}
-              stroke={10}
-              percent={caloriesPct}
-              remaining={remaining}
-              numClass="text-xl"
-              labelClass="text-[11px]"
-            />
-          </div>
-        </div>
-        <div className="grid grid-cols-3 gap-3">
-          <MacroBar label="Белки" value={row.macros.protein} target={goal(goals?.protein)} gradient={MACRO_GRADIENT.protein} />
-          <MacroBar label="Жиры" value={row.macros.fat} target={goal(goals?.fat)} gradient={MACRO_GRADIENT.fat} />
-          <MacroBar label="Углеводы" value={row.macros.carbs} target={goal(goals?.carbs)} gradient={MACRO_GRADIENT.carbs} />
         </div>
       </div>
     </li>
@@ -298,7 +260,7 @@ export function PatientList({ initialData }: { initialData: PatientListData }) {
             </p>
           ) : (
             <>
-              <ul className="grid grid-cols-1 gap-4 md:grid-cols-2 2xl:grid-cols-3">
+              <ul className="grid grid-cols-1 gap-3 md:grid-cols-2 2xl:grid-cols-3">
                 {items.map((row) => (
                   <PatientCardTile key={row.patientId} row={row} now={now} />
                 ))}

@@ -148,24 +148,17 @@ export function CaloriesTile({ day, targets }: { day: MealDay | undefined; targe
   const totals = day?.totals ?? { calories: 0, protein: 0, fat: 0, carbs: 0 };
   const goal = (v: number | undefined) => (v === undefined ? null : Math.round(v));
   return (
-    <section className={cn(TILE, "flex flex-col")}>
+    <section className={cn(TILE, "flex flex-col px-[14px] pt-[13px] pb-[14px]")}>
       <h2 className={TILE_TITLE}>Калории</h2>
-      <div className="mt-4 flex justify-center">
-        <CalorieRing
-          size={170}
-          stroke={16}
-          percent={s.percent}
-          remaining={s.remaining}
-          numClass="text-[42px]"
-          labelClass="text-xs"
-        />
+      <div className="mt-2 flex flex-1 items-center justify-between gap-3">
+        <CalorieRing percent={s.percent} remaining={s.remaining} />
+        <div className="flex min-w-0 flex-1 flex-col items-end gap-4">
+          <MacroBar label="Белки" value={totals.protein} target={goal(targets?.protein)} gradient={MACRO_GRADIENT.protein} />
+          <MacroBar label="Жиры" value={totals.fat} target={goal(targets?.fat)} gradient={MACRO_GRADIENT.fat} />
+          <MacroBar label="Углеводы" value={totals.carbs} target={goal(targets?.carbs)} gradient={MACRO_GRADIENT.carbs} />
+        </div>
       </div>
-      <div className="mt-5 grid grid-cols-3 gap-3">
-        <MacroBar large label="Белки" value={totals.protein} target={goal(targets?.protein)} gradient={MACRO_GRADIENT.protein} />
-        <MacroBar large label="Жиры" value={totals.fat} target={goal(targets?.fat)} gradient={MACRO_GRADIENT.fat} />
-        <MacroBar large label="Углеводы" value={totals.carbs} target={goal(targets?.carbs)} gradient={MACRO_GRADIENT.carbs} />
-      </div>
-      <p className="td-num mt-auto pt-3 text-xs text-td-ink-2">
+      <p className="td-num pt-2 text-xs text-td-ink-2">
         Съедено сегодня: {formatNumberRu(s.eaten)}
         {s.target !== null ? ` из ${formatNumberRu(s.target)}` : ""} ккал
       </p>
