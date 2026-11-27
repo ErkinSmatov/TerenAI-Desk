@@ -29,13 +29,13 @@ export function Sidebar({
         </div>
       </div>
       <CabinetNav pendingCount={pendingCount} />
-      <div className="flex flex-col gap-3 lg:mt-auto">
+      <div className="flex flex-col gap-1 lg:mt-auto">
         <ConnectWizard variant="sidebar" />
         <div className="max-lg:hidden">
           <AccountMenu triggerClassName="flex w-full items-center gap-1 rounded-[40px] bg-td-pill p-[2px] pr-4 text-left outline-none focus-visible:ring-2 focus-visible:ring-td-ink focus-visible:ring-offset-2">
             <span
               aria-hidden
-              className="flex size-[60px] shrink-0 items-center justify-center rounded-full bg-td-accent text-lg font-semibold"
+              className="flex size-[60px] shrink-0 items-center justify-center rounded-full bg-td-accent text-2xl font-bold"
             >
               {initialsOf(profile.fullName)}
             </span>
