@@ -5,7 +5,7 @@ import { api } from "@/lib/convexApi";
 import { routeForStage } from "@/lib/stage";
 import { PendingScreen } from "@/components/cabinet/PendingScreen";
 import { RejectedScreen } from "@/components/cabinet/RejectedScreen";
-import { PatientsOverview } from "@/components/patients/PatientsOverview";
+import { PendingOverview } from "@/components/patients/PendingOverview";
 
 export const metadata: Metadata = { title: "Пациенты" };
 
@@ -18,5 +18,5 @@ export default async function PatientsPage() {
   if (profile.status === "pending") return <PendingScreen profile={profile} />;
   if (profile.status === "rejected") return <RejectedScreen />;
 
-  return <PatientsOverview title="Пациенты" isHome={false} />;
+  return <PendingOverview />;
 }

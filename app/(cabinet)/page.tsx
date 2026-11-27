@@ -22,6 +22,6 @@ export default async function CabinetPage() {
     case "rejected":
       return <RejectedScreen />;
     case "verified":
-      return <PatientsOverview title="Главная" isHome />;
+      return <PatientsOverview />;
   }
 }
