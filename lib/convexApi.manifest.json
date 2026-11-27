@@ -22,6 +22,11 @@
     "doctor/connect/listPending:default",
     "doctor/connect/redeemPatientCode:default",
     "doctor/connect/startPhone:default",
+    "doctor/notes/create:default",
+    "doctor/notes/remove:default",
+    "doctor/notes/update:default",
+    "doctor/patients/get:default",
+    "doctor/patients/list:default",
     "doctor/profile/getMyProfile:default"
   ]
 }

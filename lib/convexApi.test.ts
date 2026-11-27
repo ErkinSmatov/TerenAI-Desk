@@ -14,8 +14,8 @@ function collectNames(): string[] {
 }
 
 describe("convexApi manifest", () => {
-  it("содержит 23 функции", () => {
-    expect(manifest.functions).toHaveLength(23);
+  it("содержит 28 функций", () => {
+    expect(manifest.functions).toHaveLength(28);
   });
 
   it("ссылки в api совпадают с манифестом", () => {

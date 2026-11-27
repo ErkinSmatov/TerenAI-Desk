@@ -9,6 +9,7 @@ export type DoctorId = string & { __table: "doctors" };
 export type ClinicId = string & { __table: "clinics" };
 export type UserId = string & { __table: "users" };
 export type PhoneConnectionId = string & { __table: "phoneConnections" };
+export type NoteId = string & { __table: "doctorNotes" };
 
 // ---- Общие типы ----
 export type DenyCode =
@@ -190,6 +191,126 @@ export type ListPendingResult =
 
 export type CancelConnectionResult = Denied | { ok: true } | { ok: false; code: "not_found" };
 
+// ---- doctor/patients и doctor/notes (Фаза 82) ----
+// Типы переписаны вручную из CalYo (lib/doctor/trafficLight.ts, convex/utils/doctor/*).
+export type Level = "ok" | "warning" | "critical";
+export type HealthStatus = Level | "no_data";
+export type GlucoseSample = { value: number; unit: "mmol/L" | "mg/dL"; recordedAt: number };
+export type BpSample = { systolic: number; diastolic: number; recordedAt: number };
+
+export type StatusReason =
+  | { code: "no_data"; days: number }
+  | { code: "nothing_to_evaluate" }
+  | { code: "in_range" }
+  | { code: "glucose"; level: Level; sample: GlucoseSample }
+  | { code: "blood_pressure"; level: Level; sample: BpSample };
+
+export type PatientStatus = {
+  status: HealthStatus;
+  reason: StatusReason;
+  lastRecordAt: number | null;
+};
+
+export type PeriodDays = 7 | 30 | 90;
+
+export type GlucosePoint = {
+  t: number;
+  mmol: number;
+  mgdl: number;
+  minMmol: number | null;
+  maxMmol: number | null;
+  status: Level;
+};
+export type BpPoint = { t: number; systolic: number; diastolic: number; status: Level };
+export type Series = {
+  periodDays: PeriodDays;
+  granularity: "raw" | "daily";
+  glucose: GlucosePoint[];
+  bloodPressure: BpPoint[];
+  weight: { t: number; kg: number }[];
+  steps: { date: string; steps: number }[];
+  stepsGoal: number;
+  ranges: {
+    glucoseMmol: { min: number; max: number };
+    glucoseMgdl: { min: number; max: number };
+    systolic: { min: number; max: number };
+    diastolic: { min: number; max: number };
+  };
+};
+
+export type MealType = "breakfast" | "lunch" | "dinner" | "snack";
+export type Macros = { calories: number; protein: number; fat: number; carbs: number };
+export type FeedMeal = {
+  mealId: string;
+  eatenAt: number;
+  mealType: MealType;
+  name: string | null;
+  grams: number | null;
+  calories: number;
+  protein: number;
+  fat: number;
+  carbs: number;
+};
+export type MealDay = { date: string; totals: Macros; meals: FeedMeal[] };
+export type MealFeed = {
+  days: MealDay[];
+  targets: Macros | null;
+  hasMore: boolean;
+  mealDays: number;
+};
+
+export type NoteView = {
+  noteId: NoteId;
+  authorName: string | null;
+  isMine: boolean;
+  text: string;
+  createdAt: number;
+  updatedAt: number | null;
+};
+
+export type PatientListRow = {
+  patientId: UserId;
+  displayName: string;
+  status: PatientStatus;
+  approximate: boolean;
+  lastGlucose: GlucoseSample | null;
+  lastBloodPressure: BpSample | null;
+};
+export type PatientListResult =
+  | Denied
+  | { ok: true; generatedAt: number; truncated: boolean; rows: PatientListRow[] };
+
+export type PatientProfileView = {
+  age: number | null;
+  sex: "male" | "female" | null;
+  heightCm: number | null;
+  weightKg: number | null;
+  goalTrack: string | null;
+  targets: Macros | null;
+  stepsGoal: number;
+};
+
+export type PatientCardResult =
+  | Denied
+  | {
+      ok: true;
+      generatedAt: number;
+      patient: { patientId: UserId; displayName: string; linkedAt: number | null };
+      profile: PatientProfileView;
+      status: PatientStatus;
+      approximate: boolean;
+      series: Series;
+      meals: MealFeed;
+      notes: NoteView[];
+    };
+
+export type NoteFailCode = "empty_text" | "too_long" | "not_found" | "not_author";
+export type NoteResult =
+  | Denied
+  | { ok: true; note: NoteView }
+  | { ok: false; code: NoteFailCode };
+export type NoteRemoveResult = Denied | { ok: true } | { ok: false; code: NoteFailCode };
+
 type NoArgs = Record<string, never>;
 
 export const api = {
@@ -282,5 +403,30 @@ export const api = {
       { connectionId: PhoneConnectionId },
       CancelConnectionResult
     >("doctor/connect/cancel:default"),
+  },
+  patients: {
+    list: makeFunctionReference<"mutation", NoArgs, PatientListResult>(
+      "doctor/patients/list:default",
+    ),
+    get: makeFunctionReference<
+      "mutation",
+      { patientId: UserId; periodDays: PeriodDays; mealDays: number },
+      PatientCardResult
+    >("doctor/patients/get:default"),
+  },
+  notes: {
+    create: makeFunctionReference<"mutation", { patientId: UserId; text: string }, NoteResult>(
+      "doctor/notes/create:default",
+    ),
+    update: makeFunctionReference<
+      "mutation",
+      { patientId: UserId; noteId: NoteId; text: string },
+      NoteResult
+    >("doctor/notes/update:default"),
+    remove: makeFunctionReference<
+      "mutation",
+      { patientId: UserId; noteId: NoteId },
+      NoteRemoveResult
+    >("doctor/notes/remove:default"),
   },
 } as const;
