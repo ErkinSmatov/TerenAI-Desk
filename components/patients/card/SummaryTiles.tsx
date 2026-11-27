@@ -3,11 +3,13 @@ import { ArrowDownRight, ArrowUpRight } from "lucide-react";
 import type { GlucosePoint, Macros, MealDay, PatientStatus } from "@/lib/convexApi";
 import {
   caloriesSummary,
+  GLUCOSE_TICKS,
   glucoseExtremes,
+  glucoseMarkerSlot,
   glucoseValueText,
-  scaleIndex,
+  sugarBarViews,
   sugarByHour,
-  type SugarBar,
+  type SugarBarTone,
 } from "@/lib/patientSummaryView";
 import { formatNumberRu } from "@/lib/mealFeedView";
 import { cn } from "@/lib/utils";
@@ -56,20 +58,21 @@ export function PatientTile({
 
 // ---------- Сахар за день ----------
 
-const ZONE_CLASS: Record<SugarBar["zone"], string> = {
-  none: "bg-td-bar-norm/50",
-  low: "bg-td-bar-norm",
+const TONE_CLASS: Record<SugarBarTone, string> = {
+  empty: "bg-[rgba(255,254,253,0.5)]",
+  gap: "bg-td-bar-norm",
   target: "bg-td-bar-target",
-  high: "bg-td-bar-high",
+  alert: "bg-td-bar-high",
 };
-const ZONE_WORD: Record<SugarBar["zone"], string> = {
+const ZONE_WORD = {
   none: "нет данных",
-  low: "ниже цели",
-  target: "в целевой зоне",
-  high: "выше цели",
-};
+  low: "ниже нормы",
+  target: "в норме",
+  high: "выше нормы",
+} as const;
 const HOUR_LABELS = [3, 6, 9, 12, 15, 18, 21, 24];
 
+// Плитка 712x100 (Figma 1494:5741): 24 столбика по часам, высота 20..40px по значению.
 export function SugarDayTile({
   points,
   zone,
@@ -81,7 +84,7 @@ export function SugarDayTile({
   now: number;
   offsetMinutes: number;
 }) {
-  const bars = sugarByHour(points, now, offsetMinutes, zone);
+  const bars = sugarBarViews(sugarByHour(points, now, offsetMinutes, zone));
   const hasAny = bars.some((b) => b.mmol !== null);
   const summary = hasAny
     ? `Сахар за последние 24 часа по часам: ${bars
@@ -90,54 +93,31 @@ export function SugarDayTile({
         .join("; ")}`
     : "Сахар за день: нет измерений";
   return (
-    <section className={cn(TILE, "lg:col-span-2")}>
+    <section className={cn(TILE, "flex min-h-[100px] flex-col px-7 py-2 lg:col-span-2")}>
       <div className="flex flex-wrap items-baseline justify-between gap-x-4">
-        <h2 className={TILE_TITLE}>Сахар за день</h2>
-        {!hasAny ? (
-          <p className="text-sm text-td-ink-2">За последние 24 часа измерений нет</p>
-        ) : null}
+        <h2 className="text-base font-semibold text-td-ink">Сахар за день</h2>
+        {!hasAny ? <p className="text-xs text-td-ink-2">За последние 24 часа измерений нет</p> : null}
       </div>
-      {/* 24 столбика показываются и без данных: пустые часы остаются заглушками. */}
-      <div
-        role="img"
-        aria-label={summary}
-        className="mt-4 flex h-[140px] items-end justify-between gap-[3px] sm:gap-[10px]"
-      >
-        {bars.map((b) => {
-          const h = b.mmol === null ? 8 : Math.min(140, Math.max(16, (b.mmol / 14) * 140));
-          return (
-            <span
-              key={b.hour}
-              aria-hidden
-              title={b.mmol === null ? undefined : `${b.hour}:00, ${nf1.format(b.mmol)} ммоль/л`}
-              className={cn("w-2 shrink-0 rounded-[4px]", ZONE_CLASS[b.zone])}
-              style={{ height: h }}
-            />
-          );
-        })}
-      </div>
-      <div aria-hidden className="td-num mt-2 flex justify-between text-[10px] text-td-ink-2">
-        {HOUR_LABELS.map((h) => (
-          <span key={h}>{h}:00</span>
+      {/* 24 столбика остаются и без данных: заглушки h=20. */}
+      <div role="img" aria-label={summary} className="mt-1 flex h-10 items-end justify-between">
+        {bars.map((b) => (
+          <span
+            key={b.hour}
+            aria-hidden
+            title={b.mmol === null ? undefined : `${b.hour}:00, ${nf1.format(b.mmol)} ммоль/л`}
+            className={cn("w-2 shrink-0 rounded-[4px]", TONE_CLASS[b.tone])}
+            style={{ height: b.height }}
+          />
         ))}
       </div>
-      {hasAny ? (
-        <p className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-td-ink-2">
-          <Legend cls="bg-td-bar-target" text="в целевой зоне" />
-          <Legend cls="bg-td-bar-high" text="выше цели" />
-          <Legend cls="bg-td-bar-norm" text="ниже цели" />
-        </p>
-      ) : null}
+      <div aria-hidden className="mt-1 flex justify-between text-[10px] font-medium text-td-ink-2">
+        {HOUR_LABELS.map((h) => (
+          <span key={h} className="td-num">
+            {h}:00
+          </span>
+        ))}
+      </div>
     </section>
-  );
-}
-
-function Legend({ cls, text }: { cls: string; text: string }) {
-  return (
-    <span className="inline-flex items-center gap-1.5">
-      <span aria-hidden className={cn("inline-block size-3 rounded-full ring-1 ring-black/10", cls)} />
-      {text}
-    </span>
   );
 }
 
@@ -168,8 +148,6 @@ export function CaloriesTile({ day, targets }: { day: MealDay | undefined; targe
 
 // ---------- Глюкоза ----------
 
-const SCALE_TICKS = 25;
-
 function ExtremeTile({
   label,
   value,
@@ -185,23 +163,34 @@ function ExtremeTile({
 }) {
   return (
     <div
-      className="relative flex min-h-[96px] flex-col justify-between rounded-[24px] p-4 text-[#F3F5F9]"
+      className="flex min-w-0 flex-1 flex-col gap-3 rounded-[24px] p-[14px] text-[#F3F5F9]"
       style={{
         background: tone === "low" ? "var(--td-glucose-low)" : "var(--td-glucose-high)",
-        boxShadow: "var(--td-glucose-glow)",
+        boxShadow: tone === "low" ? "var(--td-glucose-low-glow)" : "var(--td-glucose-high-glow)",
       }}
     >
-      <Icon className="absolute top-3 right-3 size-5" aria-hidden />
-      <p className="text-xs font-semibold">{label}</p>
-      <p>
+      <div className="flex items-center justify-between">
+        <p className="text-xs font-semibold">{label}</p>
+        <Icon size={16} strokeWidth={1.66667} className="text-[#F3F5F9]" aria-hidden />
+      </div>
+      <p className="flex items-end gap-1">
         <span className="td-num text-xl font-medium">{value}</span>
-        <span className="ml-1 text-xs">{unitText}</span>
+        <span className="td-num text-xs text-[rgba(243,245,249,0.45)]">{unitText}</span>
       </p>
     </div>
   );
 }
 
-// Колонка «Глюкоза»: плитка с текущим значением и под ней пара Низкий/Высокий.
+function GlucoseMarker() {
+  return (
+    <svg width={8} height={40} viewBox="0 0 8 40" fill="none" className="shrink-0" aria-hidden>
+      <path d="M4 8L0.535899 2L7.4641 2L4 8Z" fill="#C9F14C" />
+      <rect x={3} y={10} width={2} height={30} rx={1} fill="#C9F14C" />
+    </svg>
+  );
+}
+
+// Колонка «Глюкоза»: плитка 216px с текущим значением и под ней пара Низкий/Высокий.
 export function GlucoseTile({
   points,
   unit,
@@ -213,35 +202,36 @@ export function GlucoseTile({
   const ext = glucoseExtremes(points);
   const unitText = unit === "mmol" ? "ммоль/л" : "мг/дл";
   const show = (mmol: number | null) => (mmol === null ? "—" : glucoseValueText(mmol, unit));
-  const active = last ? scaleIndex(last.mmol, SCALE_TICKS) : -1;
+  const slot = glucoseMarkerSlot(last ? last.mmol : null);
+  // 14 штрихов; маркер стоит между ними в позиции slot (0..14).
+  const row: ("tick" | "marker")[] = Array.from({ length: GLUCOSE_TICKS }, () => "tick");
+  row.splice(slot, 0, "marker");
   return (
     <div className="flex flex-col gap-3">
+      {/* Белый текст на этом градиенте: контраст ниже AA, решение пользователя (макет Figma). */}
       <section
-        className="flex flex-1 flex-col rounded-[36px] p-6 text-td-ink"
+        className="relative h-[216px] overflow-hidden rounded-[36px] text-white"
         style={{
-          background: "radial-gradient(circle at 50% 40%, rgb(201,165,175), rgb(201,211,216))",
+          background: "radial-gradient(circle at 50% 19%, rgb(201,165,175), rgb(201,211,216) 75%)",
           boxShadow: "inset 0 0 70px #C6D0D7",
         }}
       >
-        <h2 className={TILE_TITLE}>Глюкоза</h2>
-        <div className="flex flex-1 flex-col items-center justify-center py-3 text-center">
-          {/* Белое число на этом градиенте даёт контраст около 2:1 (ниже AA), поэтому текст тёмный. */}
-          <p className="td-num text-[60px] leading-none font-medium">{last ? show(last.mmol) : "—"}</p>
-          {last ? <p className="mt-1 text-xs text-td-ink-2">{unitText}</p> : null}
+        <h2 className="absolute top-4 left-6 text-base font-semibold">Глюкоза</h2>
+        <div className="absolute top-[68px] right-0 left-0 flex flex-col items-center">
+          <p className="td-num text-[60px] leading-[60px] font-normal">{last ? show(last.mmol) : "—"}</p>
+          {last ? <p className="text-xs text-[rgba(255,255,255,0.65)]">{unitText}</p> : null}
         </div>
-        <div aria-hidden className="flex h-10 items-center justify-between">
-          {Array.from({ length: SCALE_TICKS }, (_, i) => (
-            <span
-              key={i}
-              className={cn(
-                "shrink-0 rounded-[1px]",
-                i === active ? "h-10 w-2 bg-td-accent" : "h-5 w-[2px] bg-td-ink/40",
-              )}
-            />
-          ))}
+        <div aria-hidden className="absolute top-[153px] right-0 left-0 flex items-start justify-center gap-[6px]">
+          {row.map((kind, i) =>
+            kind === "marker" ? (
+              <GlucoseMarker key={i} />
+            ) : (
+              <span key={i} className="mt-[10px] h-5 w-[2px] shrink-0 rounded-[4px] bg-white" />
+            ),
+          )}
         </div>
       </section>
-      <div className="grid grid-cols-2 gap-3">
+      <div className="flex gap-3">
         <ExtremeTile label="Низкий" value={show(ext.min)} unitText={unitText} tone="low" Icon={ArrowDownRight} />
         <ExtremeTile label="Высокий" value={show(ext.max)} unitText={unitText} tone="high" Icon={ArrowUpRight} />
       </div>
